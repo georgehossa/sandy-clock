@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFinishTone } from '@/hooks/useFinishTone';
 import { t } from '@/lib/i18n';
 import { theme } from '@/lib/theme';
@@ -29,6 +30,7 @@ const TONE_ICONS: Record<ToneId, keyof typeof Ionicons.glyphMap> = {
 
 export default function ParentSettings() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const presetColors = useSandClockStore((s) => s.presetColors);
   const tone = useSandClockStore((s) => s.tone);
@@ -48,10 +50,16 @@ export default function ParentSettings() {
   const activePreset: PresetId = armedPresetId ?? PRESET_IDS[0];
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: Math.max(insets.bottom, theme.spacing.xl) },
+      ]}
+    >
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"

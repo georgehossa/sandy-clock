@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Hourglass } from '@/components/Hourglass/Hourglass';
 import { configureAudioSession } from '@/lib/audio';
+import { SHOW_CONTROLS } from '@/lib/flags';
 import { t } from '@/lib/i18n';
 import { theme } from '@/lib/theme';
 import { useFinishTone } from '@/hooks/useFinishTone';
@@ -12,6 +15,8 @@ import { useSandClockStore } from '@/state/store';
 
 export default function KidHome() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const runState = useSandClockStore((s) => s.runState);
   const start = useSandClockStore((s) => s.start);
@@ -35,8 +40,16 @@ export default function KidHome() {
       : t('home.promptArm');
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="dark-content" />
+    <View
+      style={[
+        styles.root,
+        {
+          paddingTop: insets.top,
+          paddingBottom: SHOW_CONTROLS ? 0 : insets.bottom,
+        },
+      ]}
+    >
+      <StatusBar style="dark" />
 
       {/* Nav bar */}
       <View style={styles.navBar}>
@@ -62,38 +75,37 @@ export default function KidHome() {
         <Text style={styles.prompt}>{prompt}</Text>
       </View>
 
-      {/* Controls bar: Reset | Play | Stop */}
-      <View style={styles.controls}>
-        {/* Reset */}
-        <Pressable
-          onPress={reset}
-          accessibilityRole="button"
-          accessibilityLabel="Reset"
-          style={styles.btnSecondary}
-        >
-          <Ionicons name="refresh-outline" size={22} color={theme.colors.fontPrimary} />
-        </Pressable>
+      {/* Controls bar: Reset | Play | Stop — gated by SHOW_CONTROLS */}
+      {SHOW_CONTROLS && (
+        <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
+          <Pressable
+            onPress={reset}
+            accessibilityRole="button"
+            accessibilityLabel="Reset"
+            style={styles.btnSecondary}
+          >
+            <Ionicons name="refresh-outline" size={22} color={theme.colors.fontPrimary} />
+          </Pressable>
 
-        {/* Play */}
-        <Pressable
-          onPress={start}
-          accessibilityRole="button"
-          accessibilityLabel="Play"
-          style={styles.btnPrimary}
-        >
-          <Ionicons name="play" size={26} color={theme.colors.fontPrimary} />
-        </Pressable>
+          <Pressable
+            onPress={start}
+            accessibilityRole="button"
+            accessibilityLabel="Play"
+            style={styles.btnPrimary}
+          >
+            <Ionicons name="play" size={26} color={theme.colors.fontPrimary} />
+          </Pressable>
 
-        {/* Stop */}
-        <Pressable
-          onPress={stop}
-          accessibilityRole="button"
-          accessibilityLabel="Stop"
-          style={styles.btnSecondary}
-        >
-          <Ionicons name="stop" size={22} color={theme.colors.fontPrimary} />
-        </Pressable>
-      </View>
+          <Pressable
+            onPress={stop}
+            accessibilityRole="button"
+            accessibilityLabel="Stop"
+            style={styles.btnSecondary}
+          >
+            <Ionicons name="stop" size={22} color={theme.colors.fontPrimary} />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -103,7 +115,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.bgPrimary,
     paddingHorizontal: theme.spacing.sm,
-    paddingTop: theme.spacing.xs,
   },
   navBar: {
     flexDirection: 'row',
@@ -140,8 +151,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
   },
   btnSecondary: {
     width: 56,
