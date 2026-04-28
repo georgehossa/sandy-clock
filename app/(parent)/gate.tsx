@@ -1,7 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { t } from '@/lib/i18n';
+import { theme } from '@/lib/theme';
 
 const HOLD_MS = 3000;
 
@@ -14,14 +17,15 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const buildGrid = () => {
-  const others = [0, 1, 2, 3, 4, 5, 6, 8, 9];
-  const eight = shuffle(others).slice(0, 8);
-  return shuffle([...eight, 7]);
+/** Returns a 9-element shuffled array of digits 1–9 (7 is always included). */
+const buildGrid = (): number[] => {
+  const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  return shuffle(digits);
 };
 
 export default function ParentGate() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [grid, setGrid] = useState<number[]>(buildGrid());
   const [wrong, setWrong] = useState(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,71 +60,199 @@ export default function ParentGate() {
     }
   };
 
-  const cells = useMemo(
-    () =>
-      grid.map((n, i) => (
-        <Pressable
-          key={`${i}-${n}`}
-          onPress={() => handleTap(n)}
-          style={styles.cell}
-          accessibilityRole="button"
-          accessibilityLabel={`${n}`}
-        >
-          <Text style={styles.cellText}>{n}</Text>
-        </Pressable>
-      )),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [grid],
+  // Split grid into 3 rows of 3
+  const rows = useMemo(() => {
+    return [grid.slice(0, 3), grid.slice(3, 6), grid.slice(6, 9)];
+  }, [grid]);
+
+  const renderKey = (n: number, idx: number) => (
+    <Pressable
+      key={`${idx}-${n}`}
+      onPress={() => handleTap(n)}
+      style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
+      accessibilityRole="button"
+      accessibilityLabel={`${n}`}
+    >
+      <Text style={styles.keyText}>{n}</Text>
+    </Pressable>
   );
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.title}>{t('gate.title')}</Text>
+    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
 
-      <Pressable
-        onPressIn={startHold}
-        onPressOut={cancelHold}
-        style={({ pressed }) => [styles.holdTarget, pressed && styles.holdActive]}
-        accessibilityLabel={t('gate.longPress')}
-      >
-        <Text style={styles.holdLabel}>{t('gate.longPress')}</Text>
-      </Pressable>
+      {/* Header — back chevron */}
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={16}
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.colors.fontPrimary} />
+        </Pressable>
+      </View>
 
-      <Text style={styles.or}>· · ·</Text>
+      {/* Content — vertically centered */}
+      <View style={styles.content}>
 
-      <Text style={styles.tapPrompt}>{t('gate.tapSeven')}</Text>
-      <View style={styles.grid}>{cells}</View>
-      {wrong && <Text style={styles.wrong}>{t('gate.wrong')}</Text>}
+        {/* Lock badge */}
+        <View style={styles.lockBadge}>
+          <Ionicons name="lock-closed-outline" size={32} color={theme.colors.mintDark} />
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>{t('gate.title')}</Text>
+
+        {/* Hold button */}
+        <Pressable
+          onPressIn={startHold}
+          onPressOut={cancelHold}
+          style={({ pressed }) => [styles.holdBtn, pressed && styles.holdBtnPressed]}
+          accessibilityLabel={t('gate.longPress')}
+        >
+          <Ionicons name="hand-left-outline" size={22} color={theme.colors.fontPrimary} />
+          <Text style={styles.holdLabel}>{t('gate.longPress')}</Text>
+        </Pressable>
+
+        {/* Tap prompt */}
+        <Text style={styles.tapPrompt}>{t('gate.tapSeven')}</Text>
+
+        {/* Numpad — 4 rows */}
+        <View style={styles.numpad}>
+          {rows.map((row, ri) => (
+            <View key={ri} style={styles.numpadRow}>
+              {row.map((n, ci) => renderKey(n, ri * 3 + ci))}
+            </View>
+          ))}
+          {/* Row 4: spacer – 0 – spacer */}
+          <View style={styles.numpadRow}>
+            <View style={styles.keySpacer} />
+            <Pressable
+              onPress={() => handleTap(0)}
+              style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="0"
+            >
+              <Text style={styles.keyText}>0</Text>
+            </Pressable>
+            <View style={styles.keySpacer} />
+          </View>
+        </View>
+
+        {/* Wrong answer feedback */}
+        {wrong && <Text style={styles.wrong}>{t('gate.wrong')}</Text>}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FFFBEB', alignItems: 'center', padding: 24 },
-  title: { fontSize: 22, fontWeight: '800', color: '#1F2937', marginVertical: 12 },
-  holdTarget: {
-    width: '100%',
-    paddingVertical: 28,
-    borderRadius: 18,
-    backgroundColor: '#E5E7EB',
-    alignItems: 'center',
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.bgPrimary,
   },
-  holdActive: { backgroundColor: '#FDE047' },
-  holdLabel: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
-  or: { fontSize: 18, color: '#9CA3AF', marginVertical: 14 },
-  tapPrompt: { fontSize: 16, fontWeight: '700', color: '#1F2937', marginBottom: 12 },
-  grid: { width: 240, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  cell: {
-    width: 70,
-    height: 70,
-    margin: 5,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    height: 48,
+  },
+
+  // Content — vertically centered
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    paddingHorizontal: theme.spacing.md,
+    gap: theme.spacing.md,
   },
-  cellText: { fontSize: 26, fontWeight: '800', color: '#1F2937' },
-  wrong: { marginTop: 12, color: '#DC2626', fontWeight: '700' },
+
+  // Lock badge
+  lockBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.bgSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Title
+  title: {
+    fontSize: 30,
+    fontWeight: theme.font.weight.bold,
+    fontFamily: theme.font.familyMap.bold,
+    color: theme.colors.fontPrimary,
+    textAlign: 'center',
+  },
+
+  // Hold button
+  holdBtn: {
+    width: '100%',
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: theme.colors.mint,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    ...theme.shadow.card,
+  },
+  holdBtnPressed: {
+    backgroundColor: theme.colors.mintDark,
+  },
+  holdLabel: {
+    fontSize: 15,
+    fontWeight: theme.font.weight.semibold,
+    fontFamily: theme.font.familyMap.semibold,
+    color: theme.colors.fontPrimary,
+  },
+
+  // Tap prompt
+  tapPrompt: {
+    fontSize: 15,
+    fontWeight: theme.font.weight.regular,
+    fontFamily: theme.font.familyMap.regular,
+    color: theme.colors.fontSecondary,
+  },
+
+  // Numpad
+  numpad: {
+    gap: 12,
+  },
+  numpadRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  key: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.bgSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  keyPressed: {
+    backgroundColor: theme.colors.mint,
+  },
+  keySpacer: {
+    width: 80,
+    height: 80,
+  },
+  keyText: {
+    fontSize: 28,
+    fontWeight: theme.font.weight.bold,
+    fontFamily: theme.font.familyMap.bold,
+    color: theme.colors.fontPrimary,
+  },
+
+  // Wrong
+  wrong: {
+    fontSize: theme.font.size.sm,
+    fontFamily: theme.font.familyMap.semibold,
+    fontWeight: theme.font.weight.semibold,
+    color: theme.colors.sandDark,
+  },
 });
