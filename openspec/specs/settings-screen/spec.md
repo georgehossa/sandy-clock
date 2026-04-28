@@ -18,27 +18,42 @@ The Settings Screen header SHALL display a `<` back chevron on the left, the tit
 - **WHEN** the user taps the back chevron
 - **THEN** `router.back()` is called
 
-### Requirement: TIMER section shows horizontal pill duration buttons
-The Settings Screen TIMER section SHALL display a horizontal scrollable row of pill-shaped duration buttons showing the durations `[5, 10, 15, 25, 30]` minutes. The active selection SHALL use `theme.colors.mint` background with `theme.colors.fontPrimary` text; inactive pills SHALL use `theme.colors.bgSecondary` background with `theme.colors.fontSecondary` text.
+### Requirement: TIMER section displays equal-width rectangular tiles in a single row
+The TIMER section SHALL render duration options as equal-width rectangular tiles (`flex: 1`) in a horizontal row with `gap: 10`, `height: 56`, `cornerRadius: 16` — no horizontal scrolling. Each tile's background SHALL be `presetColors[id]` in all states. All tile text (number + "min") SHALL use `$font-primary` in all states. The active tile SHALL show a 2px `$font-primary` border ring; inactive tiles have no border ring.
 
-#### Scenario: Active duration pill is highlighted
-- **WHEN** a duration is selected and the Settings Screen renders
-- **THEN** the corresponding pill button has `theme.colors.mint` background
-
-#### Scenario: Inactive duration pills are muted
-- **WHEN** a duration pill is not selected
-- **THEN** it has `theme.colors.bgSecondary` background and `theme.colors.fontSecondary` text
-
-#### Scenario: All 5 durations are shown
+#### Scenario: Timer tiles share equal width
 - **WHEN** the TIMER section renders
-- **THEN** pills for 5, 10, 15, 25, and 30 minutes are all visible
+- **THEN** all duration tiles have equal width filling the available row width
 
-### Requirement: COLOR section shows circular swatches in a horizontal row
-The Settings Screen COLOR section SHALL display circular color swatches (36×36) in a horizontal row, one per palette color. The active swatch SHALL display a ring/border indicator.
+#### Scenario: Tile background shows preset color
+- **WHEN** the TIMER section renders
+- **THEN** each tile's background color matches `presetColors[id]` for that preset (not `$bg-secondary`)
 
-#### Scenario: Active swatch has ring indicator
-- **WHEN** a color swatch is selected
-- **THEN** it displays a 2px ring border using `theme.colors.fontPrimary`
+#### Scenario: Active tile has a border ring indicator
+- **WHEN** a timer tile is the currently armed preset
+- **THEN** a 2px `$font-primary` border ring is visible on the tile
+
+#### Scenario: Inactive tile has no border ring
+- **WHEN** a timer tile is not the currently armed preset
+- **THEN** no border ring is visible on the tile
+
+#### Scenario: All tile text uses `$font-primary`
+- **WHEN** any duration tile renders
+- **THEN** the number and "min" label are both in `$font-primary`, regardless of active state
+
+### Requirement: DEFAULT_PRESET_COLORS matches Pencil design values
+The default sand color per preset SHALL match the Pencil design timer tile colors exactly.
+
+#### Scenario: Preset colors match design
+- **WHEN** the store initializes with default values
+- **THEN** `presetColors` maps: 3 min → `#E8945A`, 5 min → `#7B9ACC`, 10 min → `#C47EA0`, 15 min → `#C8A84A`
+
+### Requirement: Sand color changes automatically when a timer preset is selected
+When the user selects a timer preset, the hourglass sand color SHALL immediately reflect that preset's color.
+
+#### Scenario: Sand color matches armed preset
+- **WHEN** a preset is armed via `arm(id)`
+- **THEN** the hourglass sand color uses `presetColors[id]` for that preset
 
 ### Requirement: SOUND section shows options in a rounded card
 The Settings Screen SOUND section SHALL render sound options inside a rounded card (cornerRadius 16, background `theme.colors.bgSecondary`), each row showing an icon and label. The active option shows a checkmark.

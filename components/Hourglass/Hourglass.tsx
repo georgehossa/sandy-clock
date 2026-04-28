@@ -15,6 +15,7 @@ import { detectDeviceTier, glitterCountForTier } from '@/lib/deviceTier';
 import { theme } from '@/lib/theme';
 import { useReduceMotion } from '@/lib/useReduceMotion';
 import { useTimer } from '@/hooks/useTimer';
+import { DEFAULT_PRESET_COLORS } from '@/state/presets';
 import { useSandClockStore } from '@/state/store';
 import { FallStream } from './FallStream';
 import { GlitterField } from './GlitterField';
@@ -38,11 +39,10 @@ export const Hourglass = ({ size }: Props) => {
 
   const rawProgress = useTimer();
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
-  const presetColors = useSandClockStore((s) => s.presetColors);
   const runState = useSandClockStore((s) => s.runState);
 
   const progress = runState === 'running' ? rawProgress : 1;
-  const sandColor = armedPresetId ? presetColors[armedPresetId] : theme.colors.sandOrange;
+  const sandColor = armedPresetId ? DEFAULT_PRESET_COLORS[armedPresetId] : theme.colors.sandOrange;
   const clock = useClock();
 
   // Build the RRect for Box (needed for BoxShadow)

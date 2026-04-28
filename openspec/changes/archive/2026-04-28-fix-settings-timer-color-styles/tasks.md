@@ -23,4 +23,4 @@
 
 - [x] 4.1 Run `npx tsc --noEmit` — confirm no type errors
 - [x] 4.2 Run `npm test` — confirm no regressions
-- [ ] 4.3 Verify on simulator: timer tiles are equal-width rectangles, active tile is mint with white text, color swatches are 48×48 with ring-outside active indicator
+- [x] 4.3 Verify on simulator: timer tiles are equal-width rectangles, active tile is mint with white text, color swatches are 48×48 with ring-outside active indicator

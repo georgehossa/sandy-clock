@@ -2,9 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import {
-  DEFAULT_PRESET_COLORS,
   DEFAULT_TONE,
-  PALETTE_COLORS,
   PRESET_DURATIONS_MS,
   type PresetId,
   type ToneId,
@@ -14,19 +12,15 @@ export type RunState = 'idle' | 'armed' | 'running' | 'finished';
 export type LanguagePref = 'en' | 'es' | 'system';
 
 type PersistedSlice = {
-  presetColors: Record<PresetId, string>;
   tone: ToneId;
   language: LanguagePref;
-};
-
-type EphemeralSlice = {
+  // Run context — persisted so cold-boot after force-kill can resume a run
   runState: RunState;
   armedPresetId: PresetId | null;
   startedAt: number | null;
 };
 
 type Actions = {
-  setPresetColor: (id: PresetId, color: string) => void;
   setTone: (tone: ToneId) => void;
   setLanguage: (lang: LanguagePref) => void;
   arm: (id: PresetId) => void;
@@ -36,15 +30,11 @@ type Actions = {
   finish: () => void;
 };
 
-export type SandClockStore = PersistedSlice & EphemeralSlice & Actions;
+export type SandClockStore = PersistedSlice & Actions;
 
 const initialPersisted: PersistedSlice = {
-  presetColors: { ...DEFAULT_PRESET_COLORS },
   tone: DEFAULT_TONE,
   language: 'system',
-};
-
-const initialEphemeral: EphemeralSlice = {
   runState: 'idle',
   armedPresetId: null,
   startedAt: null,
@@ -54,12 +44,6 @@ export const useSandClockStore = create<SandClockStore>()(
   persist(
     (set, get) => ({
       ...initialPersisted,
-      ...initialEphemeral,
-
-      setPresetColor: (id, color) => {
-        if (!PALETTE_COLORS.includes(color)) return;
-        set((s) => ({ presetColors: { ...s.presetColors, [id]: color } }));
-      },
 
       setTone: (tone) => set({ tone }),
 
@@ -95,15 +79,40 @@ export const useSandClockStore = create<SandClockStore>()(
       name: 'sand-clock-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s): PersistedSlice => ({
-        presetColors: s.presetColors,
         tone: s.tone,
         language: s.language,
+        runState: s.runState,
+        armedPresetId: s.armedPresetId,
+        startedAt: s.startedAt,
       }),
-      version: 2,
+      version: 6,
       migrate: (_state, _version) => {
-        // v1 → v2: preset IDs changed from [3,5,10,15] to [5,10,15,25,30].
-        // Drop persisted presetColors so defaults are re-applied.
+        // v6: run context (runState, armedPresetId, startedAt) now persisted
+        //     for cold-boot resume. Reset all prior persisted state to defaults.
         return { ...initialPersisted };
+      },
+      onRehydrateStorage: () => (state) => {
+        // On cold boot: validate a restored run. If the timer has already
+        // elapsed (or state is stale), reset to idle rather than showing a
+        // ghost run from a previous session.
+        if (!state) return;
+        if (state.runState === 'running' && state.startedAt && state.armedPresetId) {
+          const durationMs = PRESET_DURATIONS_MS[state.armedPresetId] ?? 0;
+          const elapsed = Date.now() - state.startedAt;
+          if (elapsed >= durationMs) {
+            // Timer finished while the app was killed — snap to idle (not
+            // 'finished', since we can't reliably play the tone on cold boot).
+            state.runState = 'idle';
+            state.startedAt = null;
+          }
+          // else: elapsed < durationMs — run is still live, useTimer will
+          // pick up from the persisted startedAt and resume correctly.
+        } else if (state.runState === 'running') {
+          // runState is running but missing context — reset defensively.
+          state.runState = 'idle';
+          state.startedAt = null;
+          state.armedPresetId = null;
+        }
       },
     },
   ),
