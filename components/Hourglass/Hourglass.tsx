@@ -40,8 +40,19 @@ export const Hourglass = ({ size }: Props) => {
   const rawProgress = useTimer();
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const runState = useSandClockStore((s) => s.runState);
+  const sandTop = useSandClockStore((s) => s.sandTop);
 
-  const progress = runState === 'running' ? rawProgress : 1;
+  // sandTop alternates each rotation, tracking which chamber holds the sand.
+  // SandBody mapping: progress=0 → top full / bottom empty.
+  //                   progress=1 → top empty / bottom full.
+  //
+  // sandTop=false (sand at bottom, initial):
+  //   Resting: progress=1 (bottom full). Running: 1→0 (bottom drains → top fills).
+  //
+  // sandTop=true (sand at top, after first run):
+  //   Resting: progress=0 (top full). Running: 0→1 (top drains → bottom fills).
+  const timerProgress = runState === 'running' ? rawProgress : 0;
+  const progress = sandTop ? timerProgress : 1 - timerProgress;
   const sandColor = armedPresetId ? DEFAULT_PRESET_COLORS[armedPresetId] : theme.colors.sandOrange;
   const clock = useClock();
 

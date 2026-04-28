@@ -18,6 +18,9 @@ type PersistedSlice = {
   runState: RunState;
   armedPresetId: PresetId | null;
   startedAt: number | null;
+  // Tracks which chamber holds the sand. Alternates on each rotation.
+  // false = sand in bottom chamber (initial state), true = sand in top chamber.
+  sandTop: boolean;
 };
 
 type Actions = {
@@ -35,9 +38,10 @@ export type SandClockStore = PersistedSlice & Actions;
 const initialPersisted: PersistedSlice = {
   tone: DEFAULT_TONE,
   language: 'system',
-  runState: 'idle',
-  armedPresetId: null,
+  runState: 'armed',
+  armedPresetId: '3',
   startedAt: null,
+  sandTop: false,
 };
 
 export const useSandClockStore = create<SandClockStore>()(
@@ -73,7 +77,11 @@ export const useSandClockStore = create<SandClockStore>()(
 
       stop: () => set({ runState: 'idle', armedPresetId: null, startedAt: null }),
 
-      finish: () => set({ runState: 'finished' }),
+      finish: () => {
+        const s = get();
+        // Toggle sandTop: sand has moved to the opposite chamber.
+        set({ runState: 'finished', sandTop: !s.sandTop });
+      },
     }),
     {
       name: 'sand-clock-store',
@@ -84,11 +92,12 @@ export const useSandClockStore = create<SandClockStore>()(
         runState: s.runState,
         armedPresetId: s.armedPresetId,
         startedAt: s.startedAt,
+        sandTop: s.sandTop,
       }),
-      version: 6,
+      version: 7,
       migrate: (_state, _version) => {
-        // v6: run context (runState, armedPresetId, startedAt) now persisted
-        //     for cold-boot resume. Reset all prior persisted state to defaults.
+        // v7: 3-minute preset auto-armed by default. Reset to new defaults
+        //     so existing users pick up the armed state.
         return { ...initialPersisted };
       },
       onRehydrateStorage: () => (state) => {
@@ -100,18 +109,19 @@ export const useSandClockStore = create<SandClockStore>()(
           const durationMs = PRESET_DURATIONS_MS[state.armedPresetId] ?? 0;
           const elapsed = Date.now() - state.startedAt;
           if (elapsed >= durationMs) {
-            // Timer finished while the app was killed — snap to idle (not
+            // Timer finished while the app was killed — snap to armed (not
             // 'finished', since we can't reliably play the tone on cold boot).
-            state.runState = 'idle';
+            // Keep the same preset armed so the kid can just rotate again.
+            state.runState = 'armed';
             state.startedAt = null;
           }
           // else: elapsed < durationMs — run is still live, useTimer will
           // pick up from the persisted startedAt and resume correctly.
         } else if (state.runState === 'running') {
-          // runState is running but missing context — reset defensively.
-          state.runState = 'idle';
+          // runState is running but missing context — reset to armed with default preset.
+          state.runState = 'armed';
           state.startedAt = null;
-          state.armedPresetId = null;
+          state.armedPresetId = state.armedPresetId ?? '3';
         }
       },
     },

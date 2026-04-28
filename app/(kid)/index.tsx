@@ -53,7 +53,7 @@ export default function KidHome() {
 
       {/* Nav bar */}
       <View style={styles.navBar}>
-        {flipDebug && (
+        {__DEV__ && flipDebug && (
           <Text style={styles.debug}>
             normY {flipDebug.normY.toFixed(2)} · {flipDebug.state}
           </Text>

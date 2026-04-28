@@ -10,23 +10,24 @@ const KEEP_AWAKE_TAG = 'sand-clock-run';
 const SAMPLE_INTERVAL_MS = 1000 / 30; // 30 Hz
 
 /**
- * Compute normalized Y and Z gravity components from raw accelerometer values.
+ * Compute normalized Y and Z gravity components from raw sensor values.
  *
  * normY = y / |g|  (−1 = portrait upright, +1 = portrait upside-down)
- * normZ = z / |g|  (|normZ| ≥ 0.5 means the phone is lying flat)
+ * normZ = z / |g|  (|normZ| ≥ 0.6 means the phone is lying flat)
  *
- * Platform sign correction: expo-sensors inverts the gravity vector on Android
- * relative to iOS. We negate Y (and Z) on Android so the same physical gesture
- * produces the same normY sign on both platforms.
+ * Sign correction is only needed for the Accelerometer fallback on Android.
+ * DeviceMotion already normalizes signs in expo-sensors native code
+ * (via `value - 2*gravity`), so no correction is needed on that path.
  */
 const computeNormYZ = (
   x: number,
   y: number,
   z: number,
+  correctSign: boolean,
 ): { normY: number; normZ: number } => {
   const mag = Math.sqrt(x * x + y * y + z * z);
   if (mag < 1e-3) return { normY: 0, normZ: 0 };
-  const sign = Platform.OS === 'android' ? -1 : 1;
+  const sign = correctSign && Platform.OS === 'android' ? -1 : 1;
   return {
     normY: sign * (y / mag),
     normZ: sign * (z / mag),
@@ -61,9 +62,11 @@ export const useFlipDetector = (enabled: boolean) => {
           console.log('[flip] fired but no preset armed');
           return;
         }
+        // If already running, ignore the flip — don't reset mid-timer.
+        // The sand should keep flowing from its current position.
+        if (s.runState === 'running') return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        if (s.runState === 'running') s.reset();
-        else s.start();
+        s.start();
         activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
       }
     };
@@ -79,7 +82,8 @@ export const useFlipDetector = (enabled: boolean) => {
             const a = m.accelerationIncludingGravity;
             if (!a) return;
             const { x = 0, y = 0, z = 0 } = a;
-            const { normY, normZ } = computeNormYZ(x, y, z);
+            // DeviceMotion already normalizes Android signs — no correction needed.
+            const { normY, normZ } = computeNormYZ(x, y, z, false);
             handleSample(normY, normZ);
           });
           console.log('[flip] using DeviceMotion');
@@ -98,7 +102,8 @@ export const useFlipDetector = (enabled: boolean) => {
         }
         Accelerometer.setUpdateInterval(SAMPLE_INTERVAL_MS);
         sub = Accelerometer.addListener(({ x, y, z }) => {
-          const { normY, normZ } = computeNormYZ(x, y, z);
+          // Accelerometer on Android uses raw native signs — correction needed.
+          const { normY, normZ } = computeNormYZ(x, y, z, true);
           handleSample(normY, normZ);
         });
         console.log('[flip] using Accelerometer');
