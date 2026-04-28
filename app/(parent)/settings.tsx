@@ -39,10 +39,13 @@ export default function ParentSettings() {
   const setTone = useSandClockStore((s) => s.setTone);
   const setLanguage = useSandClockStore((s) => s.setLanguage);
 
-  const { playPreview } = useFinishTone();
+  const { playPreviewFor } = useFinishTone();
   const previewTone = (id: ToneId) => {
+    // Play first (with a fresh player for `id`), then persist the selection.
+    // Order matters: setTone() triggers a re-render that destroys the current
+    // player, so calling play after setTone() would hit a stale native object.
+    playPreviewFor(id);
     setTone(id);
-    setTimeout(playPreview, 50);
   };
 
   return (
