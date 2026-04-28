@@ -75,11 +75,7 @@ export default function ParentSettings() {
       {/* TIMER Section */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>TIMER</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pillRow}
-        >
+        <View style={styles.timerRow}>
           {PRESET_IDS.map((id: PresetId) => {
             const isActive = armedPresetId === id;
             return (
@@ -88,22 +84,26 @@ export default function ParentSettings() {
                 onPress={() => arm(id)}
                 accessibilityRole="button"
                 accessibilityLabel={t('a11y.selectPreset', { minutes: id })}
-                style={[styles.pill, isActive && styles.pillActive]}
+                style={[styles.timerTile, isActive && styles.timerTileActive]}
               >
-                <Text style={[styles.pillNumber, isActive && styles.pillNumberActive]}>
+                <Text style={[styles.timerNumber, isActive && styles.timerNumberActive]}>
                   {id}
                 </Text>
-                <Text style={[styles.pillUnit, isActive && styles.pillUnitActive]}>min</Text>
+                <Text style={[styles.timerUnit, isActive && styles.timerUnitActive]}>min</Text>
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
       </View>
 
       {/* COLOR Section */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>COLOR</Text>
-        <View style={styles.swatchRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.swatchRow}
+        >
           {PALETTE_COLORS.map((c) => {
             const isActive = presetColors[activePreset] === c;
             return (
@@ -112,11 +112,20 @@ export default function ParentSettings() {
                 onPress={() => setPresetColor(activePreset, c)}
                 accessibilityRole="button"
                 accessibilityLabel={t('a11y.presetColor', { minutes: activePreset })}
-                style={[styles.swatch, { backgroundColor: c }, isActive && styles.swatchActive]}
-              />
+              >
+                {isActive ? (
+                  // Active: transparent outer ring wrapper + inner color circle
+                  <View style={styles.swatchRingOuter}>
+                    <View style={[styles.swatchRingInner, { backgroundColor: c }]} />
+                  </View>
+                ) : (
+                  // Inactive: plain colored circle
+                  <View style={[styles.swatch, { backgroundColor: c }]} />
+                )}
+              </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       </View>
 
       {/* SOUND Section */}
@@ -230,56 +239,70 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  // Duration pills
-  pillRow: {
+  // Timer tiles — equal-width rectangular cards in a row
+  timerRow: {
     flexDirection: 'row',
-    gap: theme.spacing.xs,
-    paddingVertical: 2,
+    gap: 10,
   },
-  pill: {
+  timerTile: {
+    flex: 1,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: theme.colors.bgSecondary,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.bgSecondary,
-    minWidth: 56,
   },
-  pillActive: {
+  timerTileActive: {
     backgroundColor: theme.colors.mint,
   },
-  pillNumber: {
-    fontSize: theme.font.size.md,
-    fontFamily: theme.font.familyMap.semibold,
-    fontWeight: theme.font.weight.semibold,
+  timerNumber: {
+    fontSize: 18,
+    fontFamily: theme.font.familyMap.regular,
+    fontWeight: '500' as const,
     color: theme.colors.fontSecondary,
   },
-  pillNumberActive: {
-    color: theme.colors.fontPrimary,
+  timerNumberActive: {
+    fontFamily: theme.font.familyMap.semibold,
+    fontWeight: theme.font.weight.semibold,
+    color: theme.colors.white,
   },
-  pillUnit: {
+  timerUnit: {
     fontSize: 10,
     fontFamily: theme.font.familyMap.regular,
     color: theme.colors.fontTertiary,
   },
-  pillUnitActive: {
-    color: theme.colors.fontSecondary,
+  timerUnitActive: {
+    color: '#FFFFFFCC',
+    fontWeight: '500' as const,
   },
 
   // Color swatches
   swatchRow: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
-    flexWrap: 'wrap',
   },
+  // Inactive swatch — plain 48×48 circle
   swatch: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  // Active swatch — transparent outer ring wrapper
+  swatchRingOuter: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2.5,
+    borderColor: theme.colors.mint,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Active swatch — 36×36 inner color circle
+  swatchRingInner: {
     width: 36,
     height: 36,
     borderRadius: 18,
-  },
-  swatchActive: {
-    borderWidth: 2,
-    borderColor: theme.colors.fontPrimary,
   },
 
   // Sound card
