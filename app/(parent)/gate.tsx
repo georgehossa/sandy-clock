@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { t } from '@/lib/i18n';
@@ -29,6 +29,8 @@ export default function ParentGate() {
   const [grid, setGrid] = useState<number[]>(buildGrid());
   const [wrong, setWrong] = useState(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fillAnim = useRef(new Animated.Value(0)).current;
+  const fillWidth = fillAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   // Reset gate state when app backgrounds.
   useEffect(() => {
@@ -43,12 +45,19 @@ export default function ParentGate() {
   const startHold = () => {
     if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
     holdTimerRef.current = setTimeout(() => passGate(), HOLD_MS);
+    Animated.timing(fillAnim, {
+      toValue: 1,
+      duration: HOLD_MS,
+      useNativeDriver: false,
+    }).start();
   };
   const cancelHold = () => {
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
     }
+    fillAnim.stopAnimation();
+    fillAnim.setValue(0);
   };
 
   const handleTap = (n: number) => {
@@ -103,16 +112,21 @@ export default function ParentGate() {
         {/* Title */}
         <Text style={styles.title}>{t('gate.title')}</Text>
 
-        {/* Hold button */}
-        <Pressable
-          onPressIn={startHold}
-          onPressOut={cancelHold}
-          style={({ pressed }) => [styles.holdBtn, pressed && styles.holdBtnPressed]}
-          accessibilityLabel={t('gate.longPress')}
-        >
-          <Ionicons name="hand-left-outline" size={22} color={theme.colors.fontPrimary} />
-          <Text style={styles.holdLabel}>{t('gate.longPress')}</Text>
-        </Pressable>
+        {/* Hold button — outer container clips the fill to border radius */}
+        <View style={styles.holdBtn}>
+          {/* Animated fill layer */}
+          <Animated.View style={[styles.holdFill, { width: fillWidth }]} />
+          {/* Pressable sits on top, receives all touches */}
+          <Pressable
+            onPressIn={startHold}
+            onPressOut={cancelHold}
+            style={styles.holdPressable}
+            accessibilityLabel={t('gate.longPress')}
+          >
+            <Ionicons name="hand-left-outline" size={22} color={theme.colors.fontPrimary} />
+            <Text style={styles.holdLabel}>{t('gate.longPress')}</Text>
+          </Pressable>
+        </View>
 
         {/* Tap prompt */}
         <Text style={styles.tapPrompt}>{t('gate.tapSeven')}</Text>
@@ -188,20 +202,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Hold button
+  // Hold button — outer container
   holdBtn: {
     width: '100%',
     height: 72,
     borderRadius: 20,
     backgroundColor: theme.colors.mint,
+    overflow: 'hidden',
+    ...theme.shadow.card,
+  },
+  // Animated fill layer (mintDark sweeps left → right)
+  holdFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: theme.colors.mintDark,
+  },
+  // Pressable on top of fill — captures all touches
+  holdPressable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    ...theme.shadow.card,
-  },
-  holdBtnPressed: {
-    backgroundColor: theme.colors.mintDark,
   },
   holdLabel: {
     fontSize: 15,
