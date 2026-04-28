@@ -12,29 +12,29 @@ provenance. CC0 / Public Domain only.
 
 ### bubble-pop.m4a — kid-friendly playful
 
-- **Source URL**:
-- **Author handle**:
+- **Source URL**: [https://pixabay.com/sound-effects/film-special-effects-bubble-pop-406640/](https://pixabay.com/sound-effects/film-special-effects-bubble-pop-406640/)
+- **Author handle**: [dragon-studio-38165424](https://pixabay.com/users/dragon-studio-38165424/)
 - **License**: CC0 / Public Domain
-- **Download date**:
+- **Download date**: 2026-04-28
 - **Filename**: `bubble-pop.m4a`
 - **Length**: ≤ 2.0 s
 - **Loudness**: normalize to within ±1 LUFS of the others
 
 ### magic-chime.m4a — kid-friendly gentle sparkle (default)
 
-- **Source URL**:
-- **Author handle**:
+- **Source URL**: [https://pixabay.com/sound-effects/film-special-effects-cute-chime-439613/](https://pixabay.com/sound-effects/film-special-effects-cute-chime-439613/)
+- **Author handle**: [dragon-studio-38165424](https://pixabay.com/users/dragon-studio-38165424/)
 - **License**: CC0 / Public Domain
-- **Download date**:
+- **Download date**: 2026-04-28
 - **Filename**: `magic-chime.m4a`
 - **Length**: ≤ 2.0 s
 
 ### soft-bell.m4a — neutral
 
-- **Source URL**:
-- **Author handle**:
+- **Source URL**: [https://pixabay.com/sound-effects/film-special-effects-notification-bell-sound-376888/](https://pixabay.com/sound-effects/film-special-effects-notification-bell-sound-376888/)
+- **Author handle**: [dragon-studio-38165424](https://pixabay.com/users/dragon-studio-38165424/)
 - **License**: CC0 / Public Domain
-- **Download date**:
+- **Download date**: 2026-04-28
 - **Filename**: `soft-bell.m4a`
 - **Length**: ≤ 2.0 s
 

@@ -34,7 +34,7 @@
 ## 5. Timer
 
 - [x] 5.1 Implement `hooks/useTimer.ts` driving progress as `(now - startedAt) / durationMs` via Skia clock
-- [ ] 5.2 Persist `startedAt` to AsyncStorage on each `running` transition; rehydrate on foreground
+- [x] 5.2 Persist `startedAt` to AsyncStorage on each `running` transition; rehydrate on foreground
 - [x] 5.3 Dispatch `finished` transition when progress ≥ 1, releasing keep-awake and triggering finish-tone playback
 - [x] 5.4 Unit test: 15-min simulated run drift < 100 ms
 
@@ -50,7 +50,7 @@
 
 ## 7. Finish Tone
 
-- [ ] 7.1 Add three CC0 audio files under `assets/audio/` (`bubble-pop.m4a`, `magic-chime.m4a`, `soft-bell.m4a`), each ≤ 2.0s, normalized to within ±1 LUFS
+- [x] 7.1 Add three CC0 audio files under `assets/audio/` (`bubble-pop.m4a`, `magic-chime.m4a`, `soft-bell.m4a`), each ≤ 2.0s, normalized to within ±1 LUFS
 - [x] 7.2 Create `assets/audio/SOURCES.md` with source URL, author, license, download date, filename for each tone
 - [x] 7.3 Build `lib/audio.ts` preloading the active tone via `expo-audio`; reload on tone change
 - [x] 7.4 Configure audio session to **respect** silent mode (do not override)
@@ -89,9 +89,9 @@
 
 ## 12. Localization Review
 
-- [ ] 12.1 Inventory every rendered string and confirm all flow through `i18n-js`
-- [ ] 12.2 Send `locales/es.json` to a native Spanish speaker for review; apply edits
-- [ ] 12.3 Add lint rule or test verifying every key in `en.json` exists in `es.json`
+- [x] 12.1 Inventory every rendered string and confirm all flow through `i18n-js`
+- [x] 12.2 Send `locales/es.json` to a native Spanish speaker for review; apply edits
+- [x] 12.3 Add lint rule or test verifying every key in `en.json` exists in `es.json`
 
 ## 13. Store Submission Prep
 
