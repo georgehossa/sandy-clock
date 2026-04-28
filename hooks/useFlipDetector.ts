@@ -2,35 +2,35 @@ import { useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Accelerometer, DeviceMotion, type DeviceMotionMeasurement } from 'expo-sensors';
-import { AppState } from 'react-native';
+import { Platform, AppState } from 'react-native';
 import { useSandClockStore } from '@/state/store';
 import { computeFlipTransition, type FlipState, type MotionSample } from './flipFsm';
 
 const KEEP_AWAKE_TAG = 'sand-clock-run';
 const SAMPLE_INTERVAL_MS = 1000 / 30; // 30 Hz
-const RAD_TO_DEG = 180 / Math.PI;
 
 /**
- * Angle (in degrees) between the device's "up" axis (out of screen) and
- * gravity. 0° = face-up flat. 90° = held vertically. 180° = face-down flat.
- * Robust to any rotation around the screen's normal.
+ * Compute normalized Y and Z gravity components from raw accelerometer values.
+ *
+ * normY = y / |g|  (−1 = portrait upright, +1 = portrait upside-down)
+ * normZ = z / |g|  (|normZ| ≥ 0.5 means the phone is lying flat)
+ *
+ * Platform sign correction: expo-sensors inverts the gravity vector on Android
+ * relative to iOS. We negate Y (and Z) on Android so the same physical gesture
+ * produces the same normY sign on both platforms.
  */
-const tiltAngleDeg = (m: DeviceMotionMeasurement): number => {
-  const a = m.accelerationIncludingGravity;
-  if (!a) return 0;
-  const { x = 0, y = 0, z = 0 } = a;
+const computeNormYZ = (
+  x: number,
+  y: number,
+  z: number,
+): { normY: number; normZ: number } => {
   const mag = Math.sqrt(x * x + y * y + z * z);
-  if (mag < 1e-3) return 0;
-  // expo-sensors gives gravity in g-units. Face-up: z ≈ -1 (iOS) or +1 (Android).
-  // Use |z| / mag so either convention maps to 0° when face-up.
-  const cosTheta = Math.min(1, Math.max(-1, Math.abs(z) / mag));
-  // angle from "either-face-flat" (0° = either flat). Flip target = 90°+ change
-  // from upright. Map to a directional pitch using sign of z so the FSM's
-  // |pitch|≥150 threshold still works:
-  //   z negative (face-up)  → pitch  ~  Math.acos(|z|/mag)             ∈ [0, 90]
-  //   z positive (face-down)→ pitch  ~  180 - Math.acos(|z|/mag)       ∈ [90, 180]
-  const base = Math.acos(cosTheta) * RAD_TO_DEG;
-  return z >= 0 ? 180 - base : base;
+  if (mag < 1e-3) return { normY: 0, normZ: 0 };
+  const sign = Platform.OS === 'android' ? -1 : 1;
+  return {
+    normY: sign * (y / mag),
+    normZ: sign * (z / mag),
+  };
 };
 
 export const useFlipDetector = (enabled: boolean) => {
@@ -38,7 +38,7 @@ export const useFlipDetector = (enabled: boolean) => {
     state: 'upright',
     since: 0,
   });
-  const [debug, setDebug] = useState<{ tilt: number; state: FlipState } | null>(null);
+  const [debug, setDebug] = useState<{ normY: number; state: FlipState } | null>(null);
   const debugTickRef = useRef(0);
 
   useEffect(() => {
@@ -46,14 +46,14 @@ export const useFlipDetector = (enabled: boolean) => {
     let mounted = true;
     let sub: { remove: () => void } | null = null;
 
-    const handleSample = (tilt: number) => {
+    const handleSample = (normY: number, normZ: number) => {
       if (!mounted) return;
-      const sample: MotionSample = { pitchDeg: tilt, t: Date.now() };
+      const sample: MotionSample = { normY, normZ, t: Date.now() };
       const next = computeFlipTransition(fsmRef.current.state, fsmRef.current.since, sample);
       fsmRef.current = { state: next.state, since: next.candidateSince };
 
       debugTickRef.current = (debugTickRef.current + 1) % 6;
-      if (debugTickRef.current === 0) setDebug({ tilt, state: next.state });
+      if (debugTickRef.current === 0) setDebug({ normY, state: next.state });
 
       if (next.fired === 'flip') {
         const s = useSandClockStore.getState();
@@ -68,15 +68,6 @@ export const useFlipDetector = (enabled: boolean) => {
       }
     };
 
-    const tiltFromAccel = (x: number, y: number, z: number): number => {
-      // Accelerometer returns g-units. Same math as tiltAngleDeg.
-      const mag = Math.sqrt(x * x + y * y + z * z);
-      if (mag < 1e-3) return 0;
-      const cos = Math.min(1, Math.max(-1, Math.abs(z) / mag));
-      const base = Math.acos(cos) * RAD_TO_DEG;
-      return z >= 0 ? 180 - base : base;
-    };
-
     (async () => {
       // Try DeviceMotion first; fall back to Accelerometer (more widely
       // available, including reliably in Expo Go).
@@ -84,7 +75,13 @@ export const useFlipDetector = (enabled: boolean) => {
         const perm = await DeviceMotion.requestPermissionsAsync();
         if (perm.granted) {
           DeviceMotion.setUpdateInterval(SAMPLE_INTERVAL_MS);
-          sub = DeviceMotion.addListener((m) => handleSample(tiltAngleDeg(m)));
+          sub = DeviceMotion.addListener((m: DeviceMotionMeasurement) => {
+            const a = m.accelerationIncludingGravity;
+            if (!a) return;
+            const { x = 0, y = 0, z = 0 } = a;
+            const { normY, normZ } = computeNormYZ(x, y, z);
+            handleSample(normY, normZ);
+          });
           console.log('[flip] using DeviceMotion');
           return;
         }
@@ -100,9 +97,10 @@ export const useFlipDetector = (enabled: boolean) => {
           return;
         }
         Accelerometer.setUpdateInterval(SAMPLE_INTERVAL_MS);
-        sub = Accelerometer.addListener(({ x, y, z }) =>
-          handleSample(tiltFromAccel(x, y, z)),
-        );
+        sub = Accelerometer.addListener(({ x, y, z }) => {
+          const { normY, normZ } = computeNormYZ(x, y, z);
+          handleSample(normY, normZ);
+        });
         console.log('[flip] using Accelerometer');
       } catch (e) {
         console.warn('[flip] Accelerometer failed', e);

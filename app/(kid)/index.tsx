@@ -55,7 +55,7 @@ export default function KidHome() {
       <View style={styles.navBar}>
         {flipDebug && (
           <Text style={styles.debug}>
-            tilt {flipDebug.tilt.toFixed(0)}° · {flipDebug.state}
+            normY {flipDebug.normY.toFixed(2)} · {flipDebug.state}
           </Text>
         )}
         <Pressable
