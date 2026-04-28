@@ -1,0 +1,39 @@
+{
+  "home": {
+    "promptArm": "Elige un tiempo",
+    "promptFlip": "¡Voltea para empezar!",
+    "running": "La arena está cayendo…",
+    "finished": "¡Listo!",
+    "presetMinutes": "{{count}} min"
+  },
+  "gate": {
+    "title": "Solo adultos",
+    "longPress": "Mantén pulsado 3 segundos",
+    "tapSeven": "Toca el número 7",
+    "wrong": "Inténtalo de nuevo"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "presets": "Tiempos y colores",
+    "tone": "Sonido final",
+    "language": "Idioma",
+    "languageSystem": "Predeterminado del sistema",
+    "languageEnglish": "English",
+    "languageSpanish": "Español",
+    "about": "Acerca de",
+    "version": "Versión",
+    "privacy": "No recopilamos nada. La app funciona totalmente sin conexión.",
+    "back": "Volver al inicio"
+  },
+  "tones": {
+    "bubble-pop": "Burbuja",
+    "magic-chime": "Campanita Mágica",
+    "soft-bell": "Campana Suave"
+  },
+  "a11y": {
+    "selectPreset": "Seleccionar temporizador de {{minutes}} minutos",
+    "openSettings": "Abrir ajustes",
+    "presetColor": "Elegir color para el temporizador de {{minutes}} minutos",
+    "hourglass": "Reloj de arena, {{percent}} por ciento restante"
+  }
+}

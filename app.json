@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Sand Clock",
+    "slug": "sand-clock",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "sandclock",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F0EB"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.jorgeossa.sandclock",
+      "deploymentTarget": "15.1",
+      "infoPlist": {
+        "NSMotionUsageDescription": "Sand Clock starts the timer when you flip the phone.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.jorgeossa.sandclock",
+      "minSdkVersion": 26,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F0EB"
+      },
+      "permissions": [],
+      "useFeatures": [
+        {
+          "name": "android.hardware.sensor.accelerometer",
+          "required": true
+        },
+        {
+          "name": "android.hardware.sensor.gyroscope",
+          "required": false
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

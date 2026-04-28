@@ -1,0 +1,39 @@
+{
+  "home": {
+    "promptArm": "Pick a time",
+    "promptFlip": "Flip to start!",
+    "running": "Sand is falling…",
+    "finished": "All done!",
+    "presetMinutes": "{{count}} min"
+  },
+  "gate": {
+    "title": "Grown-ups only",
+    "longPress": "Hold here for 3 seconds",
+    "tapSeven": "Tap the number 7",
+    "wrong": "Try again"
+  },
+  "settings": {
+    "title": "Settings",
+    "presets": "Times & colors",
+    "tone": "Finish sound",
+    "language": "Language",
+    "languageSystem": "System default",
+    "languageEnglish": "English",
+    "languageSpanish": "Español",
+    "about": "About",
+    "version": "Version",
+    "privacy": "We collect nothing. The app works fully offline.",
+    "back": "Back to home"
+  },
+  "tones": {
+    "bubble-pop": "Bubble Pop",
+    "magic-chime": "Magic Chime",
+    "soft-bell": "Soft Bell"
+  },
+  "a11y": {
+    "selectPreset": "Select {{minutes}} minute timer",
+    "openSettings": "Open settings",
+    "presetColor": "Choose color for {{minutes}} minute timer",
+    "hourglass": "Hourglass timer, {{percent}} percent remaining"
+  }
+}
