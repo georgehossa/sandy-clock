@@ -1,7 +1,7 @@
 {
   "home": {
     "promptArm": "Elige un tiempo",
-    "promptFlip": "¡Voltea para empezar!",
+    "promptPlay": "Pulsa Play para empezar",
     "running": "La arena está cayendo…",
     "finished": "¡Listo!",
     "presetMinutes": "{{count}} min"

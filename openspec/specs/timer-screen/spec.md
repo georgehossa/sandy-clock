@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Timer Screen uses design token colors
 The Timer Screen SHALL use `theme.colors.bgPrimary` (`#F5F0EB`) as the full-screen background color.
@@ -44,72 +44,11 @@ The Timer Screen navigation bar SHALL show a settings gear icon using `theme.col
 - **THEN** the settings gear icon color is `#2D3B36`
 
 ### Requirement: 3-minute preset is auto-armed on fresh launch
-The Timer Screen SHALL launch with the 3-minute preset armed by default when no persisted state exists. The user SHALL NOT be required to select a preset before rotating the phone.
-
-#### Scenario: Fresh install shows armed state
-- **WHEN** the app is launched for the first time (no persisted state)
-- **THEN** the 3-minute preset is armed and the prompt text indicates the phone is ready to rotate
+The Timer Screen SHALL launch with the 3-minute preset armed by default when no persisted state exists.
 
 #### Scenario: Persisted preset is preserved on relaunch
 - **WHEN** the app is relaunched with previously persisted state that includes an armed preset
 - **THEN** the persisted preset is used instead of the 3-minute default
-
-### Requirement: Flip detection uses vertical guard only at confirmation
-The flip FSM SHALL NOT check the vertical guard (`|normZ|` threshold) when entering the `candidate-flipped` state. The vertical guard SHALL only be checked when confirming the flip after the debounce period.
-
-#### Scenario: Candidate-flipped entered without vertical guard
-- **WHEN** normY crosses the flip threshold (-0.7) regardless of normZ value
-- **THEN** the FSM transitions from `upright` to `candidate-flipped`
-
-#### Scenario: Flip confirmed only when phone has settled vertically
-- **WHEN** the FSM is in `candidate-flipped` and 400ms have elapsed with sustained normY
-- **AND** `|normZ|` is below 0.6
-- **THEN** the FSM fires the `flip` event and transitions to `flipped`
-
-#### Scenario: Flip blocked when phone is flat after debounce
-- **WHEN** the FSM is in `candidate-flipped` and 400ms have elapsed with sustained normY
-- **AND** `|normZ|` is 0.6 or above (phone is flat on a surface)
-- **THEN** the FSM SHALL NOT fire the `flip` event and SHALL remain in `candidate-flipped`
-
-#### Scenario: Natural rotation gesture succeeds despite mid-rotation normZ spike
-- **WHEN** the user rotates the phone 180 degrees in the portrait plane (like a real hourglass)
-- **AND** normZ spikes above 0.6 during mid-rotation but settles below 0.6 after rotation completes
-- **THEN** the flip is detected and the timer starts
-
-### Requirement: Vertical guard threshold is 0.6
-The flip FSM SHALL use 0.6 as the vertical guard threshold for `|normZ|`, allowing phones held at up to approximately 37 degrees from vertical to pass the guard.
-
-#### Scenario: Phone tilted 30 degrees from vertical passes guard
-- **WHEN** the phone is held at approximately 30 degrees from vertical after rotation (`|normZ| ≈ 0.5`)
-- **THEN** the vertical guard passes and the flip is confirmed
-
-#### Scenario: Phone nearly flat on surface is blocked
-- **WHEN** the phone is placed flat on a surface after rotation (`|normZ| ≈ 0.9`)
-- **THEN** the vertical guard blocks and the flip is not confirmed
-
-### Requirement: Sensor sign correction is per sensor path
-The sign correction for Android SHALL only be applied to the Accelerometer fallback path. The DeviceMotion path SHALL NOT apply sign correction since expo-sensors normalizes Android values to match iOS convention in native code.
-
-#### Scenario: DeviceMotion path on Android uses raw values
-- **WHEN** the DeviceMotion sensor is active on Android
-- **THEN** no sign inversion is applied to the Y or Z values
-
-#### Scenario: Accelerometer fallback on Android applies sign correction
-- **WHEN** the Accelerometer fallback is active on Android
-- **THEN** Y and Z values are multiplied by -1 to match iOS convention
-
-### Requirement: Debug overlay is only visible in development builds
-The normY and FSM state debug text on the Timer Screen SHALL only render when `__DEV__` is `true`.
-
-#### Scenario: Debug text hidden in production
-- **WHEN** the app is running in a production build (`__DEV__` is `false`)
-- **THEN** no debug text (normY value, FSM state) is rendered on the Timer Screen
-
-#### Scenario: Debug text visible in development
-- **WHEN** the app is running in a development build (`__DEV__` is `true`)
-- **THEN** the normY value and FSM state are displayed in the nav bar area
-
-## MODIFIED Requirements
 
 ### Requirement: Timer Screen respects device safe area insets
 The Timer Screen SHALL apply `useSafeAreaInsets()` top inset to the nav bar padding and bottom inset to the controls area, ensuring no content is occluded by the notch, Dynamic Island, or home indicator on any iOS device.
@@ -118,17 +57,43 @@ The Timer Screen SHALL apply `useSafeAreaInsets()` top inset to the nav bar padd
 - **WHEN** the Timer Screen renders on a notched iPhone (e.g., iPhone 14 Pro)
 - **THEN** the settings gear icon is fully visible below the Dynamic Island / notch
 
-#### Scenario: Controls area clears the home indicator
+#### Scenario: Controls area always clears the home indicator
 - **WHEN** the Timer Screen renders on an iPhone with a home indicator
-- **THEN** the bottom controls bar (or bottom padding when controls are hidden) sits above the home indicator
+- **THEN** the controls bar bottom padding uses the safe area bottom inset (controls are always present, so the conditional `SHOW_CONTROLS ? 0 : insets.bottom` root padding is removed)
 
-### Requirement: Controls bar is gated by SHOW_CONTROLS feature flag
-The Reset, Play, and Stop control buttons SHALL only render when `SHOW_CONTROLS` is `true`. When `false`, the controls bar SHALL be entirely absent from the component tree.
+### Requirement: Controls bar always renders
+The Reset, Play, and Stop control buttons SHALL always render. Controls are unconditionally present.
 
-#### Scenario: Controls hidden when flag is off
-- **WHEN** `SHOW_CONTROLS` is `false`
-- **THEN** no Reset, Play, or Stop buttons are rendered on the Timer Screen
+#### Scenario: Controls always visible
+- **WHEN** the Timer Screen renders
+- **THEN** the Reset, Play, and Stop buttons are visible regardless of any build configuration
 
-#### Scenario: Controls visible when flag is on
-- **WHEN** `SHOW_CONTROLS` is `true`
-- **THEN** the Reset, Play, and Stop buttons are rendered in the controls bar at the bottom of the Timer Screen
+### Requirement: Timer Screen prompt text does not reference rotation
+The prompt shown below the hourglass SHALL NOT contain any reference to flipping or rotating the device.
+
+#### Scenario: Idle prompt instructs user to select a preset
+- **WHEN** the Timer Screen renders with no preset selected (`armedPresetId` is null)
+- **THEN** the prompt text directs the user to select a duration
+
+#### Scenario: Armed prompt instructs user to press Play
+- **WHEN** a preset is selected and `runState` is `armed`
+- **THEN** the prompt text indicates the user should press Play to start
+
+#### Scenario: Running prompt shows in-progress message
+- **WHEN** `runState` is `running`
+- **THEN** the prompt text indicates the timer is running
+
+#### Scenario: Finished prompt shows completion message
+- **WHEN** `runState` is `finished`
+- **THEN** the prompt text indicates the timer has finished
+
+### Requirement: Keep-awake activates while timer is running
+The Timer Screen SHALL activate keep-awake when `runState` transitions to `running` and deactivate it when the run ends, preventing the screen from sleeping mid-timer.
+
+#### Scenario: Screen stays awake during run
+- **WHEN** the user presses Play and `runState` becomes `running`
+- **THEN** keep-awake is activated for the duration of the run
+
+#### Scenario: Screen allows sleep after run ends
+- **WHEN** `runState` transitions away from `running` (stop, finish, reset-then-stop)
+- **THEN** keep-awake is deactivated

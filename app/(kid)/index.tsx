@@ -4,14 +4,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Hourglass } from '@/components/Hourglass/Hourglass';
 import { configureAudioSession } from '@/lib/audio';
-import { SHOW_CONTROLS } from '@/lib/flags';
 import { t } from '@/lib/i18n';
 import { theme } from '@/lib/theme';
 import { useFinishTone } from '@/hooks/useFinishTone';
-import { useFlipDetector } from '@/hooks/useFlipDetector';
 import { useSandClockStore } from '@/state/store';
+
+const KEEP_AWAKE_TAG = 'kid-home';
 
 export default function KidHome() {
   const router = useRouter();
@@ -23,12 +24,19 @@ export default function KidHome() {
   const reset = useSandClockStore((s) => s.reset);
   const stop = useSandClockStore((s) => s.stop);
 
-  const flipDebug = useFlipDetector(true);
   useFinishTone();
 
   useEffect(() => {
     configureAudioSession().catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (runState === 'running') {
+      activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
+    } else {
+      deactivateKeepAwake(KEEP_AWAKE_TAG);
+    }
+  }, [runState]);
 
   const prompt =
     runState === 'finished'
@@ -36,7 +44,7 @@ export default function KidHome() {
       : runState === 'running'
       ? t('home.running')
       : armedPresetId
-      ? t('home.promptFlip')
+      ? t('home.promptPlay')
       : t('home.promptArm');
 
   return (
@@ -45,7 +53,7 @@ export default function KidHome() {
         styles.root,
         {
           paddingTop: insets.top,
-          paddingBottom: SHOW_CONTROLS ? 0 : insets.bottom,
+          paddingBottom: insets.bottom,
         },
       ]}
     >
@@ -53,11 +61,6 @@ export default function KidHome() {
 
       {/* Nav bar */}
       <View style={styles.navBar}>
-        {__DEV__ && flipDebug && (
-          <Text style={styles.debug}>
-            normY {flipDebug.normY.toFixed(2)} · {flipDebug.state}
-          </Text>
-        )}
         <Pressable
           onPress={() => router.push('/(parent)/gate')}
           accessibilityRole="button"
@@ -75,37 +78,35 @@ export default function KidHome() {
         <Text style={styles.prompt}>{prompt}</Text>
       </View>
 
-      {/* Controls bar: Reset | Play | Stop — gated by SHOW_CONTROLS */}
-      {SHOW_CONTROLS && (
-        <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
-          <Pressable
-            onPress={reset}
-            accessibilityRole="button"
-            accessibilityLabel="Reset"
-            style={styles.btnSecondary}
-          >
-            <Ionicons name="refresh-outline" size={22} color={theme.colors.fontPrimary} />
-          </Pressable>
+      {/* Controls bar: Reset | Play | Stop */}
+      <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
+        <Pressable
+          onPress={reset}
+          accessibilityRole="button"
+          accessibilityLabel="Reset"
+          style={styles.btnSecondary}
+        >
+          <Ionicons name="refresh-outline" size={22} color={theme.colors.fontPrimary} />
+        </Pressable>
 
-          <Pressable
-            onPress={start}
-            accessibilityRole="button"
-            accessibilityLabel="Play"
-            style={styles.btnPrimary}
-          >
-            <Ionicons name="play" size={26} color={theme.colors.fontPrimary} />
-          </Pressable>
+        <Pressable
+          onPress={start}
+          accessibilityRole="button"
+          accessibilityLabel="Play"
+          style={styles.btnPrimary}
+        >
+          <Ionicons name="play" size={26} color={theme.colors.fontPrimary} />
+        </Pressable>
 
-          <Pressable
-            onPress={stop}
-            accessibilityRole="button"
-            accessibilityLabel="Stop"
-            style={styles.btnSecondary}
-          >
-            <Ionicons name="stop" size={22} color={theme.colors.fontPrimary} />
-          </Pressable>
-        </View>
-      )}
+        <Pressable
+          onPress={stop}
+          accessibilityRole="button"
+          accessibilityLabel="Stop"
+          style={styles.btnSecondary}
+        >
+          <Ionicons name="stop" size={22} color={theme.colors.fontPrimary} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -125,14 +126,6 @@ const styles = StyleSheet.create({
   },
   navBtn: {
     padding: theme.spacing.xs,
-  },
-  debug: {
-    flex: 1,
-    fontSize: theme.font.size.xs,
-    color: theme.colors.fontTertiary,
-    fontFamily: theme.font.familyMap.regular,
-    // @ts-ignore - tabular-nums not in RN types but works on iOS
-    fontVariant: ['tabular-nums'],
   },
   center: {
     flex: 1,

@@ -1,7 +1,7 @@
 {
   "home": {
     "promptArm": "Pick a time",
-    "promptFlip": "Flip to start!",
+    "promptPlay": "Press Play to start",
     "running": "Sand is falling…",
     "finished": "All done!",
     "presetMinutes": "{{count}} min"
