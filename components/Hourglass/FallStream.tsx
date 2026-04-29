@@ -1,58 +1,77 @@
-import { Circle, Group } from '@shopify/react-native-skia';
-import { useMemo } from 'react';
-import { type HourglassGeometry } from './geometry';
+import { RoundedRect } from '@shopify/react-native-skia';
+import { useDerivedValue } from 'react-native-reanimated';
+import { type SharedValue } from 'react-native-reanimated';
+import { liquidLevelY, type HourglassGeometry } from './geometry';
 
 type Props = {
   geom: HourglassGeometry;
   color: string;
+  /** timerProgress in [0,1] — used to fade stream as top chamber empties */
+  progress: number;
+  /** Fill fraction of the bottom chamber [0,1] — positions stream bottom at liquid surface */
+  bottomFraction: number;
   running: boolean;
-  clockMs: number;
+  clock: SharedValue<number>;
   reduceMotion: boolean;
 };
 
-const PARTICLE_COUNT = 6;
-const FALL_MS = 600;
+const MIN_WIDTH = 2;
+const MAX_WIDTH = 4;
+const OSCILLATION_PERIOD_MS = 400;
+const CORNER_R = 1;
 
-export const FallStream = ({ geom, color, running, clockMs, reduceMotion }: Props) => {
-  const seeds = useMemo(
-    () => Array.from({ length: PARTICLE_COUNT }, (_, i) => ({ phase: i / PARTICLE_COUNT })),
-    [],
-  );
+/**
+ * Renders the liquid pour stream inside the bottom chamber.
+ *
+ * Starts at the top of the bottom circle and ends at the current liquid surface.
+ * As the bottom fills, the surface rises and the stream shortens until it disappears.
+ * Width oscillates on the UI thread via useDerivedValue to avoid reading clock.value
+ * during render.
+ */
+export const FallStream = ({ geom, color, progress, bottomFraction, running, clock, reduceMotion }: Props) => {
+  // Hooks must run before early returns
+  const animatedWidth = useDerivedValue(() => {
+    const phase = (clock.value % OSCILLATION_PERIOD_MS) / OSCILLATION_PERIOD_MS;
+    return MIN_WIDTH + (MAX_WIDTH - MIN_WIDTH) * 0.5 * (1 + Math.sin(phase * 2 * Math.PI));
+  });
+
+  const animatedX = useDerivedValue(() => geom.cx - animatedWidth.value / 2);
 
   if (!running) return null;
 
-  // Stream falls from the bottom of the top circle to the top of the bottom circle
-  const top = geom.topCY + geom.circleR * 0.85;
-  const bottom = geom.botCY - geom.circleR * 0.85;
-  const span = bottom - top;
+  const streamTop = geom.botCY - geom.sandR;
+  const streamBottom = liquidLevelY(bottomFraction, geom.botCY, geom.sandR);
+  const streamHeight = streamBottom - streamTop;
 
-  if (span <= 0) return null;
+  if (streamHeight <= 0) return null;
 
   if (reduceMotion) {
+    const staticWidth = (MIN_WIDTH + MAX_WIDTH) / 2;
     return (
-      <Group>
-        {seeds.map((s, i) => (
-          <Circle
-            key={i}
-            cx={geom.cx}
-            cy={top + s.phase * span}
-            r={1.5}
-            color={color}
-            opacity={0.7}
-          />
-        ))}
-      </Group>
+      <RoundedRect
+        x={geom.cx - staticWidth / 2}
+        y={streamTop}
+        width={staticWidth}
+        height={streamHeight}
+        r={CORNER_R}
+        color={color}
+        opacity={0.5}
+      />
     );
   }
 
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+  const opacity = (1 - clampedProgress) * 0.85 + 0.15;
+
   return (
-    <Group>
-      {seeds.map((s, i) => {
-        const t = (clockMs / FALL_MS + s.phase) % 1;
-        const y = top + t * span;
-        const jitter = Math.sin((clockMs / 90) + i) * 1.5;
-        return <Circle key={i} cx={geom.cx + jitter} cy={y} r={1.5} color={color} />;
-      })}
-    </Group>
+    <RoundedRect
+      x={animatedX}
+      y={streamTop}
+      width={animatedWidth}
+      height={streamHeight}
+      r={CORNER_R}
+      color={color}
+      opacity={opacity}
+    />
   );
 };

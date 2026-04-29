@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Hourglass } from '@/components/Hourglass/Hourglass';
+import { HoldButton } from '@/components/HoldButton';
 import { configureAudioSession } from '@/lib/audio';
 import { t } from '@/lib/i18n';
 import { theme } from '@/lib/theme';
@@ -22,7 +23,6 @@ export default function KidHome() {
   const runState = useSandClockStore((s) => s.runState);
   const start = useSandClockStore((s) => s.start);
   const reset = useSandClockStore((s) => s.reset);
-  const stop = useSandClockStore((s) => s.stop);
 
   useFinishTone();
 
@@ -78,34 +78,28 @@ export default function KidHome() {
         <Text style={styles.prompt}>{prompt}</Text>
       </View>
 
-      {/* Controls bar: Reset | Play | Stop */}
+      {/* Controls bar: single hold-to-confirm button */}
       <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
-        <Pressable
-          onPress={reset}
-          accessibilityRole="button"
-          accessibilityLabel="Reset"
-          style={styles.btnSecondary}
-        >
-          <Ionicons name="refresh-outline" size={22} color={theme.colors.fontPrimary} />
-        </Pressable>
-
-        <Pressable
-          onPress={start}
-          accessibilityRole="button"
-          accessibilityLabel="Play"
-          style={styles.btnPrimary}
-        >
-          <Ionicons name="play" size={26} color={theme.colors.fontPrimary} />
-        </Pressable>
-
-        <Pressable
-          onPress={stop}
-          accessibilityRole="button"
-          accessibilityLabel="Stop"
-          style={styles.btnSecondary}
-        >
-          <Ionicons name="stop" size={22} color={theme.colors.fontPrimary} />
-        </Pressable>
+        {runState === 'running' ? (
+          <HoldButton
+            onAction={reset}
+            size={80}
+            bgColor={theme.colors.bgSecondary}
+            fillColor={theme.colors.sandOrange}
+            accessibilityLabel="Reset timer"
+          >
+            <Ionicons name="refresh-outline" size={28} color={theme.colors.fontPrimary} />
+          </HoldButton>
+        ) : (
+          <Pressable
+            onPress={start}
+            accessibilityRole="button"
+            accessibilityLabel="Start timer"
+            style={styles.btnPlay}
+          >
+            <Ionicons name="play" size={30} color={theme.colors.fontPrimary} />
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -140,24 +134,14 @@ const styles = StyleSheet.create({
     color: theme.colors.fontSecondary,
   },
   controls: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.spacing.lg,
     paddingTop: theme.spacing.md,
   },
-  btnSecondary: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.bgSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnPrimary: {
-    width: 72,
-    height: 72,
-    borderRadius: theme.radius.lg,
+  btnPlay: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: theme.colors.mint,
     alignItems: 'center',
     justifyContent: 'center',

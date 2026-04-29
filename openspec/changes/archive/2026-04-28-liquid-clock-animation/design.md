@@ -128,21 +128,65 @@ Actually, the simplest correct approach: keep the current layer order for cutout
   0. Pill outer shadow
   1. Pill body gradient      (filled, same as current)
   2. Top cutout circle       (dark sage background)
-  3. Top liquid fill         (horizontal-level path, uses sandR for inset)
+  3. Top liquid fill         (horizontal-level path, uses sandR, LinearGradient)
   4. Bottom cutout circle    (dark sage background)
-  5. Bottom liquid fill      (horizontal-level path, uses sandR for inset)
-  6. Liquid surface effects  (wave line, highlight)
-  7. Fall stream             (continuous pour)
-  8. Cutout rim rings        (stroked circles at circleR, on top of liquid)
+  5. Bottom liquid fill      (horizontal-level path, uses sandR, LinearGradient)
+  6. Liquid surface effects  (wave line, highlight — tier-gated)
+  7. Pour stream             (continuous filled rect, oscillating width,
+                              opacity fades with progress)
+  8. Cutout rim rings        (stroked circles at circleR — ON TOP of stream)
 ```
 
-The cutout rim rings are thin stroked circles (no fill) drawn on top of the liquid to give the appearance that the glass vessel rim sits over the liquid. The pill body itself already frames the overall shape. The rim rings create the "liquid is inside the glass bowl" illusion.
+**Why rim rings must be above the pour stream (step 8 > step 7)**:
+The pour stream passes through the neck between chambers. At the junction points where the stream exits the top circle and enters the bottom circle, it overlaps the cutout rim area. Drawing rim rings on top of the stream ensures the glass vessel wall appears to contain the liquid — the stream is visually "inside" the glass opening, not painted over its edge.
+
+```
+  Without rim rings on top:     With rim rings on top:
+
+  ┌──────────────────┐          ┌──────────────────┐
+  │    ○  rim  ○     │          │    ○  rim  ○     │
+  │   ○    │    ○    │          │   ○    │    ○    │
+  │  ○     │     ○   │          │  ○  ╔══╧══╗  ○   │
+  └────────┼─────────┘          └────╢  rim ╟─────┘
+           │  stream bleeds          ╚══╤══╝  rim covers
+           │  over rim edge           │       stream edge
+```
+
+The cutout rim rings are thin stroked circles (no fill) drawn at `circleR`. The pill body itself already frames the overall shape. The rim rings create the "liquid is inside the glass bowl" illusion at the junction points.
 
 **Rationale**: Minimal change from current architecture. Only adds one new layer (rim rings) and reorders nothing else. The liquid fill already uses `sandR` (smaller than `circleR`), so there's a natural gap between liquid edge and cutout edge — the rim ring reinforces this boundary.
 
-### 3. Liquid pour stream
+### 3. Liquid fill gradient
 
-**Decision**: Replace the 6 discrete particle dots in `FallStream.tsx` with a single narrow filled rectangle (or tapered path) connecting the two chambers. Optionally add a subtle width oscillation for a "flowing" feel.
+**Decision**: The liquid fill uses a `LinearGradient` child shader on the fill `Path`, with colors blended from a lightened variant of `sandColor` at the top to the base `sandColor` at the bottom.
+
+**Gradient bounds are fixed to the circle, not the fill level**:
+
+```
+  gradient start: vec(cx, cy - sandR)   ← top of circle (always)
+  gradient end:   vec(cx, cy + sandR)   ← bottom of circle (always)
+
+  As the liquid level drops, the visible fill shrinks upward,
+  but the gradient range stays fixed. The lighter top half of
+  the gradient is only visible when liquid is near-full.
+
+  full chamber:      half chamber:      quarter chamber:
+  ░░░░░░░░░░         (empty air)        (empty air)
+  ▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒▒▒         (empty air)
+  ▓▓▓▓▓▓▓▓▓▓         ▓▓▓▓▓▓▓▓▓▓         ▓▓▓▓▓▓▓▓▓▓
+  ████████████        ████████████        ████████████
+
+  Color shifts as level changes — naturally reads as depth.
+  Avoids the "compressed gradient" artifact of level-anchored bounds.
+```
+
+**Lightening**: The top gradient stop is `sandColor` mixed 30% toward white — achieved by a small `lightenHex(hex, 0.30)` utility in `lib/colorUtils.ts`. This file is new and small (pure function, no dependencies).
+
+**Rationale**: A subtle top-light gives the fill volume and reads as liquid. Fixing the gradient to the circle (not the fill level) means the color relationship is stable as the timer progresses — no color jumping or compression artifacts.
+
+### 4. Liquid pour stream
+
+**Decision**: Replace the 6 discrete particle dots in `FallStream.tsx` with a single narrow filled rectangle (or tapered path) connecting the two chambers. Width oscillates gently and opacity fades as the top chamber empties.
 
 ```
   CURRENT (sand)           PROPOSED (liquid)
@@ -150,16 +194,31 @@ The cutout rim rings are thin stroked circles (no fill) drawn on top of the liqu
       .                      │
      .                       │
     .                        ┃  ← narrow filled rect
-     .                       │    with subtle width
-      .                      │    oscillation
+     .                       │    oscillating width
+      .                      │    fading opacity
      .                       │
 ```
 
-**Implementation**: A single `<RoundedRect>` or `<Path>` centered at `geom.cx`, spanning from top chamber bottom to bottom chamber top. Width oscillates gently using `sin(clockMs / period)` between e.g. 2px and 4px.
+**Implementation**: A single `<RoundedRect>` centered at `geom.cx`, spanning from top chamber bottom to bottom chamber top. Width oscillates using `sin(clockMs / period)` between 2px and 4px.
 
-**Rationale**: Liquid pours as a continuous stream, not discrete drops. A thin filled shape is simpler to render than 6 animated circles and looks more liquid-like.
+**Opacity fade as top chamber empties**:
 
-### 4. Liquid surface effects
+```
+  streamOpacity = clamp(1 - progress, 0, 1) * 0.85 + 0.15
+
+  progress=0.0 → opacity 1.00   (top full, strong stream)
+  progress=0.5 → opacity 0.575  (half empty, thinning)
+  progress=0.9 → opacity 0.235  (nearly empty, faint)
+  progress=1.0 → opacity 0.15   (fully empty — stream hidden by runState check)
+```
+
+The stream is only rendered when `runState === 'running'`, so the `progress=1.0` case is academic. The fade makes the stream feel physically consistent with the draining top chamber.
+
+**Rationale**: Liquid pours as a continuous stream, not discrete drops. Opacity fade ties stream intensity to available liquid volume, which is physically intuitive and visually satisfying.
+
+**Rim rings render above the pour stream** — see Decision 5 for z-order.
+
+### 5. Liquid surface effects
 
 **Decision**: Replace the glitter field with two effects:
 
@@ -177,6 +236,9 @@ The cutout rim rings are thin stroked circles (no fill) drawn on top of the liqu
 ## Risks / Trade-offs
 
 - **[Circle-line intersection math]** → Straightforward trigonometry, but edge cases at `dy ≈ ±r` (nearly empty/full) need care to avoid visual glitches. Mitigation: clamp values and handle the full/empty cases explicitly.
+- **[Gradient fixed to circle bounds]** → The gradient spans the full circle diameter even when the liquid is low. At low fill levels only the dark bottom of the gradient is visible. This is correct and natural — it reads as depth. The lightened top is only visible when the chamber is near-full, which is when surface light-catch is most noticeable anyway.
+- **[lightenHex utility]** → Simple hex→RGB→lerp toward white→hex conversion. Edge cases: colors with alpha, shorthand hex (#RGB). Mitigation: only call with 6-digit hex strings from `DEFAULT_PRESET_COLORS` and `theme.colors.sandOrange`, which are all well-formed.
+- **[Pour stream opacity at progress=0]** → Formula gives opacity=1.00, which is the fully-loaded start state. Looks correct. Verify visually that the transition from stopped (no stream) to running (full-opacity stream) doesn't feel jarring — may need a brief fade-in on stream appear.
 - **[Performance of wave animation]** → Sine wave path rebuilt every frame. Mitigation: keep the path simple (few segments), gate behind device tier, and use the existing `useClock()` UI-thread driver.
 - **[Visual regression]** → The liquid look is fundamentally different from the current sand look. Cannot A/B test easily on a kids' app. Mitigation: manual visual review on device.
 - **[Rim ring thickness]** → Too thick looks cartoonish, too thin is invisible. Will need visual tuning. Start with 1.5-2px stroke width at the 240px hourglass size.

@@ -41,7 +41,7 @@ const initialPersisted: PersistedSlice = {
   runState: 'armed',
   armedPresetId: '3',
   startedAt: null,
-  sandTop: false,
+  sandTop: true,
 };
 
 export const useSandClockStore = create<SandClockStore>()(
@@ -78,9 +78,7 @@ export const useSandClockStore = create<SandClockStore>()(
       stop: () => set({ runState: 'idle', armedPresetId: null, startedAt: null }),
 
       finish: () => {
-        const s = get();
-        // Toggle sandTop: sand has moved to the opposite chamber.
-        set({ runState: 'finished', sandTop: !s.sandTop });
+        set({ runState: 'finished' });
       },
     }),
     {
@@ -94,10 +92,10 @@ export const useSandClockStore = create<SandClockStore>()(
         startedAt: s.startedAt,
         sandTop: s.sandTop,
       }),
-      version: 7,
+      version: 9,
       migrate: (_state, _version) => {
-        // v7: 3-minute preset auto-armed by default. Reset to new defaults
-        //     so existing users pick up the armed state.
+        // v8: liquid animation rework — reset sandTop and runState to initial
+        //     so the hourglass starts in the correct visual position.
         return { ...initialPersisted };
       },
       onRehydrateStorage: () => (state) => {
@@ -109,19 +107,25 @@ export const useSandClockStore = create<SandClockStore>()(
           const durationMs = PRESET_DURATIONS_MS[state.armedPresetId] ?? 0;
           const elapsed = Date.now() - state.startedAt;
           if (elapsed >= durationMs) {
-            // Timer finished while the app was killed — snap to armed (not
-            // 'finished', since we can't reliably play the tone on cold boot).
-            // Keep the same preset armed so the kid can just rotate again.
+            // Timer finished while the app was killed — snap to armed.
+            // Reset sandTop to true (top=full) as the canonical resting state.
             state.runState = 'armed';
             state.startedAt = null;
+            state.sandTop = true;
           }
-          // else: elapsed < durationMs — run is still live, useTimer will
-          // pick up from the persisted startedAt and resume correctly.
+          // else: elapsed < durationMs — run is still live, sandTop is valid.
         } else if (state.runState === 'running') {
-          // runState is running but missing context — reset to armed with default preset.
+          // runState is running but missing context — full reset.
           state.runState = 'armed';
           state.startedAt = null;
           state.armedPresetId = state.armedPresetId ?? '3';
+          state.sandTop = true;
+        } else if (state.runState === 'finished') {
+          // App was killed after a run finished but before the user rotated again.
+          // sandTop was toggled at finish() and is correct — leave it as-is.
+        } else {
+          // idle / armed: no active run — reset to top=full canonical resting state.
+          state.sandTop = true;
         }
       },
     },

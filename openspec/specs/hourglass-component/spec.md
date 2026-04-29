@@ -1,36 +1,124 @@
 ## ADDED Requirements
 
-### Requirement: Hourglass pill body uses sage gradient fill
-The Hourglass pill body rectangle SHALL use a vertical linear gradient from `#BFE0D4` (top) to `#9ECABC` (bottom) as its fill, matching the Pencil design.
+### Requirement: Liquid fill uses horizontal level
+Each chamber's fill SHALL be rendered as a horizontal liquid level that intersects the circular chamber, creating a flat surface at the top of the liquid. The fill region SHALL be the area of the circle below the liquid level line.
 
-#### Scenario: Pill body renders with gradient
-- **WHEN** the Hourglass canvas renders
-- **THEN** the pill body shape uses a linear gradient fill from `#BFE0D4` to `#9ECABC`
+#### Scenario: Top chamber drains as progress increases
+- **WHEN** the timer progress goes from 0 to 1
+- **THEN** the top chamber liquid level descends from the top of the circle to the bottom, reducing the visible liquid area
 
-### Requirement: Hourglass cutout circles use sage fill
-The top and bottom cutout ellipses inside the Hourglass pill SHALL use `#79B3A2` as their fill color.
+#### Scenario: Bottom chamber fills as progress increases
+- **WHEN** the timer progress goes from 0 to 1
+- **THEN** the bottom chamber liquid level descends from the bottom of the circle to the top, increasing the visible liquid area
 
-#### Scenario: Cutout ellipses render with correct color
-- **WHEN** the Hourglass canvas renders
-- **THEN** both the top and bottom cutout ellipses have fill color `#79B3A2`
+#### Scenario: Liquid surface is flat and horizontal
+- **WHEN** a chamber is partially filled (progress between 0 and 1 exclusive)
+- **THEN** the top edge of the liquid is a straight horizontal line across the chamber
+
+#### Scenario: Full chamber renders as complete circle
+- **WHEN** a chamber is completely full (progress = 0 for top, progress = 1 for bottom)
+- **THEN** the fill renders as a complete filled circle with no visible flat edge
+
+#### Scenario: Empty chamber renders nothing
+- **WHEN** a chamber is completely empty (progress = 1 for top, progress = 0 for bottom)
+- **THEN** no fill is rendered for that chamber
+
+### Requirement: Liquid fill is inset from cutout edge
+The liquid fill SHALL use `sandR` (smaller than `circleR`) for clipping, maintaining a visible gap between the liquid edge and the cutout circle rim.
+
+#### Scenario: Liquid does not touch cutout boundary
+- **WHEN** a chamber contains liquid
+- **THEN** the liquid fill boundary is inset from the cutout circle edge by `circleR - sandR`
+
+### Requirement: Cutout rim rings render on top of liquid
+Thin stroked circle rings at `circleR` radius SHALL render on top of the liquid fills in each chamber, creating the visual effect that the glass vessel rim sits over the liquid.
+
+#### Scenario: Rim is visible over filled liquid
+- **WHEN** a chamber contains liquid that reaches the cutout boundary area
+- **THEN** the rim ring is drawn on top of the liquid, not behind it
+
+#### Scenario: Rim ring uses cutout color
+- **WHEN** the rim rings render
+- **THEN** the stroke color matches the cutout circle color (`#79B3A2`)
+
+### Requirement: Fall stream is a continuous liquid pour
+The fall stream between chambers SHALL render as a continuous narrow filled shape (not discrete particles) when the timer is running.
+
+#### Scenario: Pour stream visible during running state
+- **WHEN** the timer `runState` is `running`
+- **THEN** a continuous narrow stream shape is visible connecting the top and bottom chambers through the neck zone
+
+#### Scenario: Pour stream hidden when not running
+- **WHEN** the timer `runState` is not `running`
+- **THEN** no pour stream is rendered
+
+#### Scenario: Pour stream has gentle width oscillation
+- **WHEN** the pour stream renders during running state
+- **THEN** the stream width oscillates subtly over time to create a flowing liquid appearance
+
+#### Scenario: Pour stream opacity decreases as top chamber empties
+- **WHEN** the timer is running and progressing from start to finish
+- **THEN** the stream opacity is highest at the start (top full) and decreases toward the end (top nearly empty)
+
+#### Scenario: Pour stream is rendered inside the Hourglass canvas
+- **WHEN** the timer is running
+- **THEN** the `FallStream` component is rendered as a child of the Hourglass `Canvas` between the liquid fills and surface effects
+
+### Requirement: Store version migration resets to top-full initial state
+On store version upgrade, the migration SHALL reset `sandTop` to `true` so that existing installs snap to the correct top-full visual on first launch.
+
+#### Scenario: Store migrates from any prior version
+- **WHEN** the persisted store version is older than the current version
+- **THEN** the migration resets all persisted fields to `initialPersisted`, which includes `sandTop: true`
+
+### Requirement: Liquid surface wave effect on high-tier devices
+On high-tier devices (>= 4GB RAM), a subtle sine-wave path SHALL animate at the liquid surface level in each chamber, suggesting surface tension and gentle movement.
+
+#### Scenario: Wave renders on high-tier device
+- **WHEN** the device has >= 4GB RAM and reduce-motion is not active
+- **THEN** a subtle animated wave line is visible at the liquid surface in each partially-filled chamber
+
+#### Scenario: Wave hidden on mid-tier device
+- **WHEN** the device has 2-4GB RAM
+- **THEN** no wave animation is rendered (static highlight only)
+
+#### Scenario: Wave hidden when reduce-motion is active
+- **WHEN** the OS reduce-motion accessibility setting is enabled
+- **THEN** no wave animation or surface effects are rendered
+
+### Requirement: Liquid surface highlight on mid-tier and above
+On mid-tier and high-tier devices, a semi-transparent lighter band SHALL render just below the liquid surface to suggest light catching the liquid.
+
+#### Scenario: Highlight visible on mid-tier device
+- **WHEN** the device has 2-4GB RAM and reduce-motion is not active
+- **THEN** a static semi-transparent highlight band is visible near the liquid surface
+
+#### Scenario: Highlight hidden on low-tier device
+- **WHEN** the device has < 2GB RAM
+- **THEN** no surface highlight is rendered
+
+### Requirement: Liquid fill color matches armed preset
+The liquid fill color SHALL use the armed preset's color from `DEFAULT_PRESET_COLORS`, falling back to `theme.colors.sandOrange` when no preset is armed.
+
+#### Scenario: Liquid color matches preset
+- **WHEN** the 5-minute preset is armed
+- **THEN** the liquid fill color is `#7B9ACC` (slate blue)
+
+#### Scenario: Default liquid color when no preset armed
+- **WHEN** no preset is armed
+- **THEN** the liquid fill color is `#D98B5C` (sand orange)
+
+## MODIFIED Requirements
 
 ### Requirement: Sand fill uses theme sand-orange color by default
-When no preset color is armed, the sand fill SHALL use `theme.colors.sandOrange` (`#D98B5C`) instead of the previous idle grey (`#CBD5E1`).
+When no preset color is armed, the liquid fill SHALL use `theme.colors.sandOrange` (`#D98B5C`). The fill is rendered as a horizontal liquid level rather than a pie-sector wedge.
 
-#### Scenario: Default sand color is sand-orange
+#### Scenario: Default liquid color is sand-orange
 - **WHEN** the Hourglass renders with no armed preset
-- **THEN** the sand fill color is `#D98B5C`
+- **THEN** the liquid fill color is `#D98B5C`
 
-### Requirement: Hourglass canvas background is transparent
-The Hourglass Skia Canvas SHALL use a transparent background so the screen's `theme.colors.bgPrimary` shows through.
+## REMOVED Requirements
 
-#### Scenario: Canvas background is transparent
-- **WHEN** the Hourglass renders on the Timer Screen
-- **THEN** the canvas has no opaque background fill; the parent screen background is visible
-
-### Requirement: PALETTE colors in presets match Pencil color swatch design
-The `PALETTE` in `state/presets.ts` SHALL be updated to include the colors visible in the Settings screen color swatch row: mint-green (`#B0D4C8`), sand-orange (`#D98B5C`), slate-blue (`#7B9EC4`), mauve (`#B87BA8`), warm-grey (`#9AADA5`), deep-teal (`#2D3B36`).
-
-#### Scenario: PALETTE contains design swatch colors
-- **WHEN** `PALETTE` is accessed from `state/presets.ts`
-- **THEN** it contains exactly the six color values shown in the Settings screen color swatch row
+### Requirement: Glitter field sparkle particles
+**Reason**: Sand glitter particles (tiny dots with pulsating opacity) do not suit the liquid aesthetic. Replaced by liquid surface effects (wave line, highlight band).
+**Migration**: `GlitterField.tsx` is replaced by new liquid surface effect components. Device-tier gating logic is reused for the new effects.

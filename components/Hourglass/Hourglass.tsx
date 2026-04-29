@@ -11,14 +11,14 @@ import {
 } from '@shopify/react-native-skia';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { detectDeviceTier, glitterCountForTier } from '@/lib/deviceTier';
+import { detectDeviceTier } from '@/lib/deviceTier';
 import { theme } from '@/lib/theme';
 import { useReduceMotion } from '@/lib/useReduceMotion';
 import { useTimer } from '@/hooks/useTimer';
 import { DEFAULT_PRESET_COLORS } from '@/state/presets';
 import { useSandClockStore } from '@/state/store';
 import { FallStream } from './FallStream';
-import { GlitterField } from './GlitterField';
+import { LiquidSurface } from './LiquidSurface';
 import { SandBody } from './SandBody';
 import { buildGeometry } from './geometry';
 
@@ -34,27 +34,24 @@ export const Hourglass = ({ size }: Props) => {
 
   const reduceMotion = useReduceMotion();
   const tier = detectDeviceTier();
-  const baseCount = glitterCountForTier(tier);
-  const glitterCount = reduceMotion ? 0 : baseCount;
 
   const rawProgress = useTimer();
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const runState = useSandClockStore((s) => s.runState);
-  const sandTop = useSandClockStore((s) => s.sandTop);
 
-  // sandTop alternates each rotation, tracking which chamber holds the sand.
-  // SandBody mapping: progress=0 → top full / bottom empty.
-  //                   progress=1 → top empty / bottom full.
-  //
-  // sandTop=false (sand at bottom, initial):
-  //   Resting: progress=1 (bottom full). Running: 1→0 (bottom drains → top fills).
-  //
-  // sandTop=true (sand at top, after first run):
-  //   Resting: progress=0 (top full). Running: 0→1 (top drains → bottom fills).
-  const timerProgress = runState === 'running' ? rawProgress : 0;
-  const progress = sandTop ? timerProgress : 1 - timerProgress;
+  // Liquid always drains top → bottom.
+  // finished keeps timerProgress=1 so the bottom stays full until the next run.
+  // idle/armed resets to 0 so the top is full at rest.
+  const timerProgress =
+    runState === 'running' ? rawProgress :
+    runState === 'finished' ? 1 :
+    0;
+  const topFraction = 1 - timerProgress;
   const sandColor = armedPresetId ? DEFAULT_PRESET_COLORS[armedPresetId] : theme.colors.sandOrange;
   const clock = useClock();
+
+  // Rim ring stroke width proportional to circleR (≈1.7px at 240px wide)
+  const rimStrokeWidth = geom.circleR / 52;
 
   // Build the RRect for Box (needed for BoxShadow)
   const pillRRect = useMemo(
@@ -70,13 +67,31 @@ export const Hourglass = ({ size }: Props) => {
     <View style={{ width, height }}>
       <Canvas style={{ width, height }}>
 
-        {/* ── Pill outer drop shadow ── */}
+        {/* ── 0. Pill outer drop shadow ── */}
         <Box box={pillRRect} color="transparent">
           <BoxShadow dx={0} dy={8} blur={24} color="#2D3B3630" />
           <BoxShadow dx={0} dy={2} blur={6} color="#2D3B3618" />
         </Box>
 
-        {/* ── Pill body with gradient fill ── */}
+        {/* ── 1. Rim rings BEHIND the pill body ──────────────────────────────
+             Drawn before the pill gradient so the pill paints over their outer
+             edge. Only the inner portion of the stroke is visible, sitting
+             between the liquid fill and the cutout circle edge — giving the
+             "glass vessel wall" look without protruding outside the frame.    */}
+        <Circle
+          cx={geom.cx} cy={geom.topCY} r={geom.circleR}
+          color={theme.colors.cutoutBg}
+          strokeWidth={rimStrokeWidth}
+          style="stroke"
+        />
+        <Circle
+          cx={geom.cx} cy={geom.botCY} r={geom.circleR}
+          color={theme.colors.cutoutBg}
+          strokeWidth={rimStrokeWidth}
+          style="stroke"
+        />
+
+        {/* ── 2. Pill body with gradient fill (covers rim ring outer edge) ── */}
         <RoundedRect
           x={0} y={0}
           width={width} height={height}
@@ -89,45 +104,52 @@ export const Hourglass = ({ size }: Props) => {
           />
         </RoundedRect>
 
-        {/* ── Top cutout circle (dark sage) ── */}
+        {/* ── 3. Top cutout circle background (dark sage) ── */}
         <Circle cx={geom.cx} cy={geom.topCY} r={geom.circleR} color={theme.colors.cutoutBg} />
 
-        {/* Top sand arc */}
+        {/* ── 4. Top liquid fill ── */}
+        {/* topFraction=1 → top full, topFraction=0 → top empty */}
         <SandBody
-          cx={geom.cx} cy={geom.topCY} r={geom.sandR}
-          progress={progress}
+          cx={geom.cx} cy={geom.topCY}
+          sandR={geom.sandR}
+          progress={topFraction}
           color={sandColor}
-          chamber="top"
         />
 
-        {/* ── Bottom cutout circle (dark sage) ── */}
+        {/* ── 5. Bottom cutout circle background (dark sage) ── */}
         <Circle cx={geom.cx} cy={geom.botCY} r={geom.circleR} color={theme.colors.cutoutBg} />
 
-        {/* Bottom sand arc */}
+        {/* ── 6. Bottom liquid fill ── */}
+        {/* bottom is full when top is empty: pass 1-topFraction */}
         <SandBody
-          cx={geom.cx} cy={geom.botCY} r={geom.sandR}
-          progress={progress}
+          cx={geom.cx} cy={geom.botCY}
+          sandR={geom.sandR}
+          progress={1 - topFraction}
           color={sandColor}
-          chamber="bottom"
         />
 
-        {/* Glitter shimmer */}
-        <GlitterField
-          geom={geom}
-          color={sandColor}
-          count={glitterCount}
-          progress={progress}
-          clockMs={clock.value}
-        />
-
-        {/* Falling sand stream */}
+        {/* ── 7. Pour stream (neck zone, running only) ── */}
         <FallStream
           geom={geom}
           color={sandColor}
+          progress={timerProgress}
+          bottomFraction={1 - topFraction}
           running={runState === 'running'}
-          clockMs={clock.value}
+          clock={clock}
           reduceMotion={reduceMotion}
         />
+
+        {/* ── 8. Liquid surface effects (wave + highlight, tier-gated) ── */}
+        <LiquidSurface
+          geom={geom}
+          color={sandColor}
+          topFraction={topFraction}
+          clock={clock}
+          tier={tier}
+          reduceMotion={reduceMotion}
+        />
+
+
       </Canvas>
     </View>
   );
