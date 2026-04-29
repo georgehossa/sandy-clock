@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { ConfettiOverlay } from '@/components/ConfettiOverlay';
 import { Hourglass } from '@/components/Hourglass/Hourglass';
 import { HoldButton } from '@/components/HoldButton';
 import { configureAudioSession } from '@/lib/audio';
@@ -25,6 +26,14 @@ export default function KidHome() {
   const reset = useSandClockStore((s) => s.reset);
 
   useFinishTone();
+
+  // Measure play button position for confetti origin
+  const [btnOrigin, setBtnOrigin] = useState<{ x: number; y: number } | null>(null);
+  const onControlsLayout = useCallback((e: LayoutChangeEvent) => {
+    e.target.measureInWindow((x, y, width, height) => {
+      setBtnOrigin({ x: x + width / 2, y: y + height / 2 });
+    });
+  }, []);
 
   useEffect(() => {
     configureAudioSession().catch(() => {});
@@ -78,8 +87,16 @@ export default function KidHome() {
         <Text style={styles.prompt}>{prompt}</Text>
       </View>
 
+      {/* Confetti overlay — full-screen, pointer-events none */}
+      {btnOrigin && (
+        <ConfettiOverlay originX={btnOrigin.x} originY={btnOrigin.y} />
+      )}
+
       {/* Controls bar: single hold-to-confirm button */}
-      <View style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
+      <View
+        style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}
+        onLayout={onControlsLayout}
+      >
         {runState === 'running' ? (
           <HoldButton
             onAction={reset}
