@@ -1,0 +1,28 @@
+## MODIFIED Requirements
+
+### Requirement: Fall stream is a continuous liquid pour
+The fall stream between chambers SHALL render as a continuous narrow filled shape (not discrete particles) when the timer is running and no reset fill animation is active.
+
+#### Scenario: Pour stream visible during running state
+- **WHEN** the timer `runState` is `running` and no reset fill animation is active
+- **THEN** a continuous narrow stream shape is visible connecting the top and bottom chambers through the neck zone
+
+#### Scenario: Pour stream hidden when not running
+- **WHEN** the timer `runState` is not `running`
+- **THEN** no pour stream is rendered
+
+#### Scenario: Pour stream hidden during reset fill animation
+- **WHEN** a reset fill animation is active (top chamber is animating back to full)
+- **THEN** no pour stream is rendered
+
+#### Scenario: Pour stream has gentle width oscillation
+- **WHEN** the pour stream renders during running state
+- **THEN** the stream width oscillates subtly over time to create a flowing liquid appearance
+
+#### Scenario: Pour stream opacity decreases as top chamber empties
+- **WHEN** the timer is running and progressing from start to finish
+- **THEN** the stream opacity is highest at the start (top full) and decreases toward the end (top nearly empty)
+
+#### Scenario: Pour stream is rendered inside the Hourglass canvas
+- **WHEN** the timer is running
+- **THEN** the `FallStream` component is rendered as a child of the Hourglass `Canvas` between the liquid fills and surface effects

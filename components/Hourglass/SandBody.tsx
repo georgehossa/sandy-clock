@@ -1,72 +1,57 @@
-import { Path, Skia } from '@shopify/react-native-skia';
+import { LinearGradient, Path, vec } from '@shopify/react-native-skia';
 import { useMemo } from 'react';
+import { lightenHex } from '@/lib/colorUtils';
+import { circleChordPath, liquidLevelY } from './geometry';
 
 type Props = {
   cx: number;
   cy: number;
-  r: number;
-  /** progress in [0,1]. 0 = full top / empty bottom. 1 = empty top / full bottom. */
+  sandR: number;
+  /**
+   * Fraction of this chamber that is filled with liquid [0,1].
+   *   0 → empty (no fill drawn)
+   *   1 → full (complete circle)
+   * Caller is responsible for passing the correct fraction:
+   *   top chamber    → topFraction
+   *   bottom chamber → 1 - topFraction
+   */
   progress: number;
   color: string;
-  chamber: 'top' | 'bottom';
 };
-
-const DEG = Math.PI / 180;
 
 /**
- * Build a pie-sector path centered at (cx, cy) with radius r.
- * startAngleDeg: start angle in degrees (0 = right, 90 = down, CSS convention)
- * sweepDeg: arc sweep in degrees (positive = clockwise)
+ * Renders a liquid fill for one hourglass chamber using horizontal level intersection.
+ *
+ * The fill is a Skia Path representing the area of the circle (radius=sandR) that
+ * lies below the liquid surface line. A LinearGradient is applied as a child shader,
+ * with bounds fixed to the full circle diameter so the color relationship is stable
+ * as the liquid level changes.
+ *
+ * Gradient: lightened color at top of circle → base color at bottom.
  */
-const buildPiePath = (
-  cx: number,
-  cy: number,
-  r: number,
-  startAngleDeg: number,
-  sweepDeg: number,
-) => {
-  const path = Skia.Path.Make();
-  if (sweepDeg <= 0) return path;
-  if (sweepDeg >= 360) {
-    // Full circle
-    path.addCircle(cx, cy, r);
-    return path;
-  }
+export const SandBody = ({ cx, cy, sandR, progress, color }: Props) => {
+  const levelY = useMemo(
+    () => liquidLevelY(progress, cy, sandR),
+    [progress, cy, sandR],
+  );
 
-  const startRad = startAngleDeg * DEG;
-  const endRad = (startAngleDeg + sweepDeg) * DEG;
+  const path = useMemo(
+    () => circleChordPath(cx, cy, sandR, levelY),
+    [cx, cy, sandR, levelY],
+  );
 
-  path.moveTo(cx, cy);
-  path.lineTo(cx + r * Math.cos(startRad), cy + r * Math.sin(startRad));
+  // Gradient fixed to circle bounds — not to the current fill level.
+  const gradientStart = useMemo(() => vec(cx, cy - sandR), [cx, cy, sandR]);
+  const gradientEnd = useMemo(() => vec(cx, cy + sandR), [cx, cy, sandR]);
+  const gradientColors = useMemo(() => [lightenHex(color, 0.3), color], [color]);
 
-  // Build arc via arcToOval
-  const oval = { x: cx - r, y: cy - r, width: r * 2, height: r * 2 };
-  path.arcToOval(oval, startAngleDeg, sweepDeg, false);
-  path.close();
-  return path;
-};
-
-export const SandBody = ({ cx, cy, r, progress, color, chamber }: Props) => {
-  const path = useMemo(() => {
-    if (chamber === 'top') {
-      // Top chamber: full at progress=0, empty at progress=1
-      const sweep = 360 * (1 - progress);
-      if (sweep < 1) return Skia.Path.Make();
-      // Anchor at the bottom of the circle (270°) so sand drains downward
-      // Start = 270 - sweep/2, sweep clockwise
-      const startAngle = 270 - sweep / 2;
-      return buildPiePath(cx, cy, r, startAngle, sweep);
-    } else {
-      // Bottom chamber: empty at progress=0, full at progress=1
-      const sweep = 360 * progress;
-      if (sweep < 1) return Skia.Path.Make();
-      // Anchor at the top of the circle (270° = bottom, so top = 90°... but we
-      // want sand to pile up from the bottom of the bottom circle upward).
-      // Start = 90 + (360 - sweep)/2 so it grows symmetrically from the bottom.
-      const startAngle = 270 - sweep / 2;
-      return buildPiePath(cx, cy, r, startAngle, sweep);
-    }
-  }, [cx, cy, r, progress, chamber]);
-
-  return <Path path={path} color={color} />;
+  return (
+    <Path path={path}>
+      <LinearGradient
+        start={gradientStart}
+        end={gradientEnd}
+        colors={gradientColors}
+      />
+    </Path>
+  );
 };

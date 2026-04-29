@@ -42,14 +42,18 @@ Thin stroked circle rings at `circleR` radius SHALL render on top of the liquid 
 - **THEN** the stroke color matches the cutout circle color (`#79B3A2`)
 
 ### Requirement: Fall stream is a continuous liquid pour
-The fall stream between chambers SHALL render as a continuous narrow filled shape (not discrete particles) when the timer is running.
+The fall stream between chambers SHALL render as a continuous narrow filled shape (not discrete particles) when the timer is running and no reset fill animation is active.
 
 #### Scenario: Pour stream visible during running state
-- **WHEN** the timer `runState` is `running`
+- **WHEN** the timer `runState` is `running` and no reset fill animation is active
 - **THEN** a continuous narrow stream shape is visible connecting the top and bottom chambers through the neck zone
 
 #### Scenario: Pour stream hidden when not running
 - **WHEN** the timer `runState` is not `running`
+- **THEN** no pour stream is rendered
+
+#### Scenario: Pour stream hidden during reset fill animation
+- **WHEN** a reset fill animation is active (top chamber is animating back to full)
 - **THEN** no pour stream is rendered
 
 #### Scenario: Pour stream has gentle width oscillation
