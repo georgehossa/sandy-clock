@@ -29,6 +29,17 @@ The Timer Screen SHALL render a bottom controls bar containing three buttons: Re
 - **WHEN** the controls bar renders
 - **THEN** Reset and Stop buttons use `theme.colors.bgSecondary` as their background color
 
+### Requirement: Timer Screen Play button starts timer when armed
+The Play button in the controls bar SHALL start the timer when `runState` is `armed`.
+
+#### Scenario: Play starts countdown from armed state
+- **WHEN** the user presses the Play button while `runState` is `armed`
+- **THEN** the timer transitions to `running` state and the countdown begins
+
+#### Scenario: Play is disabled when no preset selected
+- **WHEN** no preset is armed
+- **THEN** the Play button is visually disabled and does not respond to presses
+
 ### Requirement: Timer Screen uses Inter font for all text
 The Timer Screen SHALL render all text using the Inter font family from `theme.font.family`.
 
