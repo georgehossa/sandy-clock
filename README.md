@@ -3,7 +3,7 @@
 A free, ad-free, offline kids sand-clock timer for iOS and Android.
 
 - Pick 3 / 5 / 10 / 15 minutes.
-- Flip the device to start.
+- Press Play to start.
 - Glittery animated sand falls. A short tone plays when it's done.
 - Parents configure colors and finish tone behind a parent gate.
 
@@ -35,7 +35,7 @@ Sand Clock collects nothing. The app works fully offline.
 
 - No analytics SDKs, no crash reporting with PII, no ads, no IAP.
 - No accounts and no network calls of any kind.
-- The only sensors used are motion sensors (to detect the flip gesture).
+- No motion sensors or device orientation tracking.
 
 A build-time guard (`scripts/check-no-network.ts`, run via `npm test`) fails
 the build if any source file under `app/`, `components/`, `hooks/`, `state/`,
@@ -54,7 +54,6 @@ or `lib/` imports `fetch`, `XMLHttpRequest`, `expo-network`, `axios`, or
       PresetButton.tsx
     hooks/
       useTimer.ts           Drift-free progress from Date.now() deltas
-      useFlipDetector.ts    DeviceMotion → flip event with debounce
     lib/
       i18n.ts               i18n-js init + locale resolution
       audio.ts              expo-audio wrapper, single-shot finish tone

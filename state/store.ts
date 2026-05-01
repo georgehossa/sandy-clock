@@ -66,16 +66,10 @@ export const useSandClockStore = create<SandClockStore>()(
       },
 
       reset: () => {
-        const s = get();
-        if (!s.armedPresetId) {
-          set({ runState: 'idle', startedAt: null });
-          return;
-        }
-        // Mid-run reset re-arms the same preset and immediately restarts
-        set({ runState: 'running', startedAt: Date.now() });
+        set({ runState: 'idle', armedPresetId: null, startedAt: null });
       },
 
-      stop: () => set({ runState: 'idle', armedPresetId: null, startedAt: null }),
+      stop: () => set({ runState: 'armed', startedAt: null }),
 
       finish: () => {
         set({ runState: 'finished' });

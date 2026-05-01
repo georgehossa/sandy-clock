@@ -34,6 +34,9 @@
     "selectPreset": "Select {{minutes}} minute timer",
     "openSettings": "Open settings",
     "presetColor": "Choose color for {{minutes}} minute timer",
-    "hourglass": "Hourglass timer, {{percent}} percent remaining"
+    "hourglass": "Hourglass timer, {{percent}} percent remaining",
+    "startTimer": "Start timer",
+    "stopTimer": "Stop timer",
+    "resetTimer": "Reset timer"
   }
 }

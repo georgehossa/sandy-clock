@@ -20,7 +20,6 @@
       "bundleIdentifier": "com.jorgeossa.sandclock",
       "deploymentTarget": "15.1",
       "infoPlist": {
-        "NSMotionUsageDescription": "Sand Clock starts the timer when you flip the phone.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -32,16 +31,7 @@
         "backgroundColor": "#F5F0EB"
       },
       "permissions": [],
-      "useFeatures": [
-        {
-          "name": "android.hardware.sensor.accelerometer",
-          "required": true
-        },
-        {
-          "name": "android.hardware.sensor.gyroscope",
-          "required": false
-        }
-      ]
+      "useFeatures": []
     },
     "plugins": [
       "expo-router",

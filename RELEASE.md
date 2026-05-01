@@ -41,17 +41,10 @@ A free, ad-free, offline sand timer for kids.
 4. Enjoy!
 
 ### Permissions
-- **Motion sensors**: To detect flip gesture and start the timer
 - **Storage**: To save parent settings (colors, tone, language)
-
-### Privacy
-- Collects nothing
-- Works fully offline
-- No ads, no analytics, no accounts
 
 ### Requirements
 - Android 8.0+ (API 26+)
-- Accelerometer sensor
 
 ---
 **Full source code**: https://github.com/jorgeossa/sand-clock

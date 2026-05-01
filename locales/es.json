@@ -34,6 +34,9 @@
     "selectPreset": "Seleccionar temporizador de {{minutes}} minutos",
     "openSettings": "Abrir ajustes",
     "presetColor": "Elegir color para el temporizador de {{minutes}} minutos",
-    "hourglass": "Reloj de arena, {{percent}} por ciento restante"
+    "hourglass": "Reloj de arena, {{percent}} por ciento restante",
+    "startTimer": "Iniciar temporizador",
+    "stopTimer": "Detener temporizador",
+    "resetTimer": "Reiniciar temporizador"
   }
 }

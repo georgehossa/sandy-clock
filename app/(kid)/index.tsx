@@ -23,6 +23,7 @@ export default function KidHome() {
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const runState = useSandClockStore((s) => s.runState);
   const start = useSandClockStore((s) => s.start);
+  const stop = useSandClockStore((s) => s.stop);
   const reset = useSandClockStore((s) => s.reset);
 
   useFinishTone();
@@ -92,31 +93,48 @@ export default function KidHome() {
         <ConfettiOverlay originX={btnOrigin.x} originY={btnOrigin.y} />
       )}
 
-      {/* Controls bar: single hold-to-confirm button */}
+      {/* Controls bar: Reset, Play, Stop */}
       <View
         style={[styles.controls, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}
         onLayout={onControlsLayout}
       >
-        {runState === 'running' ? (
-          <HoldButton
-            onAction={reset}
-            size={80}
-            bgColor={theme.colors.bgSecondary}
-            fillColor={theme.colors.sandOrange}
-            accessibilityLabel="Reset timer"
+        <View style={styles.controlsRow}>
+          {/* Reset button */}
+          <Pressable
+            onPress={reset}
+            disabled={runState === 'idle'}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.resetTimer')}
+            style={[styles.btnSecondary, runState === 'idle' && styles.btnDisabled]}
           >
-            <Ionicons name="refresh-outline" size={28} color={theme.colors.fontPrimary} />
-          </HoldButton>
-        ) : (
+            <Ionicons name="refresh-outline" size={24} color={theme.colors.fontPrimary} />
+          </Pressable>
+
+          {/* Play button */}
           <Pressable
             onPress={start}
+            disabled={!armedPresetId || runState === 'running' || runState === 'finished'}
             accessibilityRole="button"
-            accessibilityLabel="Start timer"
-            style={styles.btnPlay}
+            accessibilityLabel={t('a11y.startTimer')}
+            style={[
+              styles.btnPlay,
+              (!armedPresetId || runState === 'running' || runState === 'finished') && styles.btnDisabled,
+            ]}
           >
             <Ionicons name="play" size={30} color={theme.colors.fontPrimary} />
           </Pressable>
-        )}
+
+          {/* Stop button */}
+          <Pressable
+            onPress={stop}
+            disabled={runState !== 'running'}
+            accessibilityRole="button"
+            accessibilityLabel={t('a11y.stopTimer')}
+            style={[styles.btnSecondary, runState !== 'running' && styles.btnDisabled]}
+          >
+            <Ionicons name="stop" size={24} color={theme.colors.fontPrimary} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -155,6 +173,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: theme.spacing.md,
   },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.md,
+  },
   btnPlay: {
     width: 80,
     height: 80,
@@ -163,5 +187,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...theme.shadow.card,
+  },
+  btnSecondary: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.bgSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadow.card,
+  },
+  btnDisabled: {
+    opacity: 0.4,
   },
 });
