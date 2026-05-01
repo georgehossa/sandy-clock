@@ -7,7 +7,18 @@ A free, ad-free, offline kids sand-clock timer for iOS and Android.
 - Glittery animated sand falls. A short tone plays when it's done.
 - Parents configure colors and finish tone behind a parent gate.
 
-## Getting started
+## Download (Android APK)
+
+No Google Play account required.
+
+1. Go to [Releases](https://github.com/jorgeossa/sand-clock/releases) and download the latest `.apk`.
+2. On your Android device, open the downloaded file.
+3. If prompted, tap **Settings → Allow from this source**, then return and tap **Install**.
+
+> **iOS:** This build is Android-only. iOS requires a paid Apple Developer account
+> ($99/yr), which is out of scope for this free project.
+
+## Build from source
 
     npm install
     npx expo start
