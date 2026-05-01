@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Sand Clock",
-    "slug": "sand-clock",
+    "name": "Sandy Clock",
+    "slug": "sandy-clock",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "sandclock",
+    "scheme": "sandyclock",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -17,14 +17,14 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.jorgeossa.sandclock",
+      "bundleIdentifier": "com.jorgeossa.sandyclock",
       "deploymentTarget": "15.1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.jorgeossa.sandclock",
+      "package": "com.jorgeossa.sandyclock",
       "minSdkVersion": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

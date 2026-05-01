@@ -76,7 +76,7 @@ export const useSandClockStore = create<SandClockStore>()(
       },
     }),
     {
-      name: 'sand-clock-store',
+      name: 'sandy-clock-store',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s): PersistedSlice => ({
         tone: s.tone,

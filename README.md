@@ -1,6 +1,6 @@
-# Sand Clock
+# Sandy Clock
 
-A free, ad-free, offline kids sand-clock timer for iOS and Android.
+A free, ad-free, offline kids sand-clock timer for Android.
 
 - Pick 3 / 5 / 10 / 15 minutes.
 - Press Play to start.
@@ -11,7 +11,7 @@ A free, ad-free, offline kids sand-clock timer for iOS and Android.
 
 No Google Play account required.
 
-1. Go to [Releases](https://github.com/jorgeossa/sand-clock/releases) and download the latest `.apk`.
+1. Go to [Releases](https://github.com/jorgeossa/sandy-clock/releases) and download the latest `.apk`.
 2. On your Android device, open the downloaded file.
 3. If prompted, tap **Settings → Allow from this source**, then return and tap **Install**.
 
@@ -31,7 +31,7 @@ Expo Go.
 
 ## Privacy
 
-Sand Clock collects nothing. The app works fully offline.
+Sandy Clock collects nothing. The app works fully offline.
 
 - No analytics SDKs, no crash reporting with PII, no ads, no IAP.
 - No accounts and no network calls of any kind.

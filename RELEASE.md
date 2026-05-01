@@ -1,9 +1,9 @@
-# Releasing Sand Clock
+# Releasing Sandy Clock
 
 ## Prerequisites
 
 - EAS CLI installed: `npm install -g eas-cli`
-- Expo account (free): https://expo.dev/signup
+- Expo account (free): <https://expo.dev/signup>
 - Authenticated: `eas login`
 
 ## Build APK
@@ -19,7 +19,7 @@ eas build --platform android --profile preview
 
 1. Go to GitHub → Releases → Draft new release
 2. Tag: `v0.1.0` (or next version)
-3. Title: `Sand Clock v0.1.0`
+3. Title: `Sandy Clock v0.1.0`
 4. Attach the downloaded `.apk` file
 5. Copy release notes from below
 6. Publish release
@@ -27,32 +27,38 @@ eas build --platform android --profile preview
 ## Release Notes Template
 
 ```markdown
-## Sand Clock vVERSION
+## Sandy Clock vVERSION
 
 A free, ad-free, offline sand timer for kids.
 
 ### What's New
+
 - First public release
 
 ### Install
+
 1. Download the `.apk` below
 2. Open on your Android device
 3. Allow "Install from unknown source" if prompted
 4. Enjoy!
 
 ### Permissions
+
 - **Storage**: To save parent settings (colors, tone, language)
 
 ### Requirements
+
 - Android 8.0+ (API 26+)
 
 ---
-**Full source code**: https://github.com/jorgeossa/sand-clock
+
+**Full source code**: [https://github.com/georgehossa/sandy-clock](https://github.com/georgehossa/sandy-clock)
 ```
 
 ## Version Bump
 
 After release, update version in:
+
 - `package.json`
 - `app.json`
 
