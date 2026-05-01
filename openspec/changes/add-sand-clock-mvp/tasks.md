@@ -97,10 +97,10 @@
 
 - [x] 13.1 Configure EAS Build profiles (`development`, `preview`, `production`) in `eas.json`
 - [x] 13.2 Produce app icon and splash in both languages-neutral form
-- [ ] 13.3 Capture screenshots (en + es) on iPhone 6.7", iPhone 5.5", Pixel 6, 7" tablet
-- [ ] 13.4 Write store listings (en + es): name, subtitle, description, keywords, privacy URL pointing to a static page restating "We collect nothing"
-- [ ] 13.5 Submit to TestFlight and Play internal track; collect feedback from ≥3 real-device sessions
-- [ ] 13.6 Phased Play release (10% → 50% → 100%); standard App Store release after TestFlight sign-off
+- [ ] 13.3 Capture screenshots on Pixel 6 for GitHub release page
+- [ ] 13.4 Write GitHub release notes with app description and privacy statement
+- [ ] 13.5 Build APK via EAS and attach to GitHub release
+- [ ] 13.6 Test APK on real Android device before publishing
 
 ## 14. Verification Against Specs
 
