@@ -95,8 +95,8 @@
 
 ## 13. Store Submission Prep
 
-- [ ] 13.1 Configure EAS Build profiles (`development`, `preview`, `production`) in `eas.json`
-- [ ] 13.2 Produce app icon and splash in both languages-neutral form
+- [x] 13.1 Configure EAS Build profiles (`development`, `preview`, `production`) in `eas.json`
+- [x] 13.2 Produce app icon and splash in both languages-neutral form
 - [ ] 13.3 Capture screenshots (en + es) on iPhone 6.7", iPhone 5.5", Pixel 6, 7" tablet
 - [ ] 13.4 Write store listings (en + es): name, subtitle, description, keywords, privacy URL pointing to a static page restating "We collect nothing"
 - [ ] 13.5 Submit to TestFlight and Play internal track; collect feedback from ≥3 real-device sessions
