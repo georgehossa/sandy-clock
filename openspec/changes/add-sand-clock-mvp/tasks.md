@@ -98,7 +98,7 @@
 - [x] 13.1 Configure EAS Build profiles (`development`, `preview`, `production`) in `eas.json`
 - [x] 13.2 Produce app icon and splash in both languages-neutral form
 - [ ] 13.3 Capture screenshots on Pixel 6 for GitHub release page
-- [ ] 13.4 Write GitHub release notes with app description and privacy statement
+- [x] 13.4 Write GitHub release notes with app description and privacy statement
 - [ ] 13.5 Build APK via EAS and attach to GitHub release
 - [ ] 13.6 Test APK on real Android device before publishing
 
