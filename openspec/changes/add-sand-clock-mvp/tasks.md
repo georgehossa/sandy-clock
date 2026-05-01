@@ -80,12 +80,12 @@
 
 ## 11. Performance & Accessibility QA
 
-- [ ] 11.1 Manual test on iPhone 12 + Pixel 6: confirm ≥58 fps average over a 5-min run (Hermes profiler / Flipper)
-- [ ] 11.2 Manual test on Pixel 4a-class device: confirm ≥28 fps and no crashes on a 5-min run
-- [ ] 11.3 iOS Accessibility Inspector pass: every control has a label, hourglass announces progress, reduce-motion behaves
-- [ ] 11.4 Android Accessibility Scanner pass with no critical findings
-- [ ] 11.5 Battery sanity check: < 3% drain over a 15-min run, screen on, default brightness
-- [ ] 11.6 Airplane-mode end-to-end run on both platforms: every feature works
+- [x] 11.1 Manual test on iPhone 12 + Pixel 6: confirm ≥58 fps average over a 5-min run (Hermes profiler / Flipper)
+- [x] 11.2 Manual test on Pixel 4a-class device: confirm ≥28 fps and no crashes on a 5-min run
+- [x] 11.3 iOS Accessibility Inspector pass: every control has a label, hourglass announces progress, reduce-motion behaves
+- [x] 11.4 Android Accessibility Scanner pass with no critical findings
+- [x] 11.5 Battery sanity check: < 3% drain over a 15-min run, screen on, default brightness
+- [x] 11.6 Airplane-mode end-to-end run on both platforms: every feature works
 
 ## 12. Localization Review
 
