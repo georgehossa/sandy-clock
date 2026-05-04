@@ -22,6 +22,8 @@ export default function KidHome() {
 
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const runState = useSandClockStore((s) => s.runState);
+  // Subscribe to language so the prompt re-renders when the locale changes.
+  useSandClockStore((s) => s.language);
   const start = useSandClockStore((s) => s.start);
   const stop = useSandClockStore((s) => s.stop);
   const reset = useSandClockStore((s) => s.reset);

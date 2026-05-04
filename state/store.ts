@@ -66,7 +66,9 @@ export const useSandClockStore = create<SandClockStore>()(
       },
 
       reset: () => {
-        set({ runState: 'idle', armedPresetId: null, startedAt: null });
+        // Keep the armed preset — only rewind the timer to zero.
+        const { armedPresetId } = get();
+        set({ runState: armedPresetId ? 'armed' : 'idle', startedAt: null });
       },
 
       stop: () => set({ runState: 'armed', startedAt: null }),

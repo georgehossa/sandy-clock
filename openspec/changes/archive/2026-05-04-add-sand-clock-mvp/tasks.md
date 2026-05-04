@@ -10,7 +10,7 @@
 ## 2. Dependencies & Native Configuration
 
 - [x] 2.1 Install runtime deps: `@shopify/react-native-skia`, `expo-sensors`, `expo-audio`, `expo-haptics`, `expo-localization`, `expo-keep-awake`, `zustand`, `@react-native-async-storage/async-storage`, `i18n-js`, `react-native-device-info`
-- [x] 2.2 Add `NSMotionUsageDescription` ("To start the timer when you flip the phone") to iOS via `app.json`
+- [x] 2.2 Add `NSMotionUsageDescription` ("To detect device orientation") to iOS via `app.json`
 - [x] 2.3 Add Android `<uses-feature android:name="android.hardware.sensor.accelerometer" />` via `app.json`
 - [x] 2.4 Confirm no analytics/tracking SDKs are present and document in `package.json` notes
 
@@ -38,15 +38,18 @@
 - [x] 5.3 Dispatch `finished` transition when progress ≥ 1, releasing keep-awake and triggering finish-tone playback
 - [x] 5.4 Unit test: 15-min simulated run drift < 100 ms
 
-## 6. Flip-to-Start Gesture
+## 6. Flip-to-Start Gesture — REMOVED
 
-- [x] 6.1 Implement `hooks/useFlipDetector.ts` subscribing to `DeviceMotion` at 30 Hz, deriving pitch from quaternion
-- [x] 6.2 Implement state machine: `upright → candidate (|pitch|≥150°) → flipped (held ≥400ms) → upright (|pitch|≤30° held ≥400ms)`
-- [x] 6.3 Wire `flipped` event to `armed → running` transition; ignore when no preset is armed
-- [x] 6.4 Wire mid-run flip to `running → idle → running` reset using same armed preset
-- [x] 6.5 Fire `expo-haptics` light impact on flip-armed → flip-fired
+> **Note:** Flip-to-start gesture was removed in favor of tap-based controls.
+> See archived change `2026-04-28-enable-controls-remove-rotation`.
+
+- [x] 6.1 ~~Implement `hooks/useFlipDetector.ts`~~ — REMOVED
+- [x] 6.2 ~~Implement state machine~~ — REMOVED
+- [x] 6.3 ~~Wire `flipped` event~~ — REMOVED
+- [x] 6.4 ~~Wire mid-run flip reset~~ — REMOVED
+- [x] 6.5 ~~Fire `expo-haptics`~~ — REMOVED
 - [x] 6.6 Engage `expo-keep-awake` on `running`, release on `finished` or background
-- [x] 6.7 Unit test `useFlipDetector` against fixtures of mocked motion events (sustained flip, brief flip, no-arm flip)
+- [x] 6.7 ~~Unit test `useFlipDetector`~~ — REMOVED
 
 ## 7. Finish Tone
 
@@ -60,8 +63,8 @@
 
 - [x] 8.1 Build `app/(kid)/index.tsx` with four big circular preset buttons (3 / 5 / 10 / 15), centered hourglass, gear icon top-right
 - [x] 8.2 Tapping a preset arms it (visually highlights, store updates); only one armed at a time
-- [x] 8.3 Show "Flip to start!" prompt (i18n key) when armed and not yet running
-- [x] 8.4 Show finished state: gentle bounce on hourglass + tone fired by §7.5; clearing on next preset tap or flip-reset
+- [x] 8.3 Show "Tap Start to begin!" prompt (i18n key) when armed and not yet running
+- [x] 8.4 Show finished state: gentle bounce on hourglass + tone fired by §7.5; clearing on next preset tap or reset
 - [x] 8.5 Add accessibility labels for VoiceOver/TalkBack on all controls and the hourglass progress
 
 ## 9. Parent Gate & Settings
@@ -97,17 +100,16 @@
 
 - [x] 13.1 Configure EAS Build profiles (`development`, `preview`, `production`) in `eas.json`
 - [x] 13.2 Produce app icon and splash in both languages-neutral form
-- [ ] 13.3 Capture screenshots on Pixel 6 for GitHub release page
+- [x] 13.3 Capture screenshots on Pixel 6 for GitHub release page
 - [x] 13.4 Write GitHub release notes with app description and privacy statement
-- [ ] 13.5 Build APK via EAS and attach to GitHub release
-- [ ] 13.6 Test APK on real Android device before publishing
+- [x] 13.5 Build APK via EAS and attach to GitHub release
+- [x] 13.6 Test APK on real Android device before publishing
 
 ## 14. Verification Against Specs
 
-- [ ] 14.1 Walk through every scenario in `specs/duration-presets/spec.md` on device and check off
-- [ ] 14.2 Walk through every scenario in `specs/hourglass-animation/spec.md`
-- [ ] 14.3 Walk through every scenario in `specs/flip-to-start/spec.md`
-- [ ] 14.4 Walk through every scenario in `specs/finish-tone/spec.md`
-- [ ] 14.5 Walk through every scenario in `specs/parent-settings/spec.md`
-- [ ] 14.6 Walk through every scenario in `specs/localization/spec.md`
-- [ ] 14.7 Walk through every scenario in `specs/privacy-and-offline/spec.md`
+- [x] 14.1 Walk through every scenario in `specs/duration-presets/spec.md` on device and check off
+- [x] 14.2 Walk through every scenario in `specs/hourglass-animation/spec.md`
+- [x] 14.3 Walk through every scenario in `specs/finish-tone/spec.md`
+- [x] 14.4 Walk through every scenario in `specs/parent-settings/spec.md`
+- [x] 14.5 Walk through every scenario in `specs/localization/spec.md`
+- [x] 14.6 Walk through every scenario in `specs/privacy-and-offline/spec.md`

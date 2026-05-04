@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -188,12 +188,18 @@ export default function ParentSettings() {
           </View>
           <View style={styles.divider} />
           {/* Twitter row */}
-          <View style={styles.cardRow}>
+          <Pressable
+            style={styles.cardRow}
+            onPress={() => Linking.openURL('https://x.com/georgehossa')}
+            accessibilityRole="link"
+            accessibilityLabel="@georgehossa on X (Twitter)"
+          >
             <View style={styles.rowLeft}>
               <Ionicons name="logo-twitter" size={20} color={theme.colors.fontSecondary} />
               <Text style={styles.rowLabel}>@georgehossa</Text>
             </View>
-          </View>
+            <Ionicons name="open-outline" size={16} color={theme.colors.fontTertiary} />
+          </Pressable>
         </View>
       </View>
     </ScrollView>
