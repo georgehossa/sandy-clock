@@ -25,14 +25,14 @@ The system SHALL include an automated check that fails the build if any source f
 - **WHEN** a developer adds `import fetch from 'cross-fetch'` in a file under `app/`
 - **THEN** the build (or CI) step fails with a clear message identifying the offending file
 
-### Requirement: Permissions limited to motion sensors
-The system SHALL request only motion-sensor access (iOS `NSMotionUsageDescription`, Android `<uses-feature android:name="android.hardware.sensor.accelerometer" />`) and SHALL NOT declare or request camera, microphone, location, contacts, photos, notifications, or background-execution permissions.
+### Requirement: Permissions limited to motion sensors and notifications
+The system SHALL request only motion-sensor access (iOS `NSMotionUsageDescription`, Android `<uses-feature android:name="android.hardware.sensor.accelerometer" />`) and notification access (Android `POST_NOTIFICATIONS` for Android 13+), and SHALL NOT declare or request camera, microphone, location, contacts, photos, or background-execution permissions.
 
 #### Scenario: iOS Info.plist
 - **WHEN** the iOS build's `Info.plist` is inspected
 - **THEN** `NSMotionUsageDescription` is present
-- **AND** no other privacy-sensitive usage description keys are present
+- **AND** no other privacy-sensitive usage description keys are present besides notification-related keys
 
 #### Scenario: Android manifest
 - **WHEN** the Android build's `AndroidManifest.xml` is inspected
-- **THEN** no permissions beyond motion-sensor feature declarations appear
+- **THEN** no permissions beyond motion-sensor feature declarations and `POST_NOTIFICATIONS` appear

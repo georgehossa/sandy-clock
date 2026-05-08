@@ -42,7 +42,15 @@
           "microphonePermission": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#F5F0EB",
+          "defaultChannel": "finish"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

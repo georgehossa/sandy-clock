@@ -16,6 +16,8 @@
     "title": "Settings",
     "presets": "Times & colors",
     "tone": "Finish sound",
+    "notifications": "Notifications",
+    "notificationsLabel": "Alert when time is up",
     "language": "Language",
     "languageSystem": "System default",
     "languageEnglish": "English",
@@ -24,6 +26,10 @@
     "version": "Version",
     "privacy": "We collect nothing. The app works fully offline.",
     "back": "Back to home"
+  },
+  "notification": {
+    "title": "{{minutes}} min timer",
+    "body": "Time's up!"
   },
   "tones": {
     "bubble-pop": "Bubble Pop",
