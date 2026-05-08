@@ -14,6 +14,7 @@ export type LanguagePref = 'en' | 'es' | 'system';
 type PersistedSlice = {
   tone: ToneId;
   language: LanguagePref;
+  notificationsEnabled: boolean;
   // Run context — persisted so cold-boot after force-kill can resume a run
   runState: RunState;
   armedPresetId: PresetId | null;
@@ -26,6 +27,7 @@ type PersistedSlice = {
 type Actions = {
   setTone: (tone: ToneId) => void;
   setLanguage: (lang: LanguagePref) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
   arm: (id: PresetId) => void;
   start: () => void;
   reset: () => void;
@@ -38,6 +40,7 @@ export type SandClockStore = PersistedSlice & Actions;
 const initialPersisted: PersistedSlice = {
   tone: DEFAULT_TONE,
   language: 'system',
+  notificationsEnabled: true,
   runState: 'armed',
   armedPresetId: '3',
   startedAt: null,
@@ -52,6 +55,8 @@ export const useSandClockStore = create<SandClockStore>()(
       setTone: (tone) => set({ tone }),
 
       setLanguage: (language) => set({ language }),
+
+      setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
 
       arm: (id) => {
         const s = get();
@@ -83,12 +88,13 @@ export const useSandClockStore = create<SandClockStore>()(
       partialize: (s): PersistedSlice => ({
         tone: s.tone,
         language: s.language,
+        notificationsEnabled: s.notificationsEnabled,
         runState: s.runState,
         armedPresetId: s.armedPresetId,
         startedAt: s.startedAt,
         sandTop: s.sandTop,
       }),
-      version: 9,
+      version: 10,
       migrate: (_state, _version) => {
         // v8: liquid animation rework — reset sandTop and runState to initial
         //     so the hourglass starts in the correct visual position.

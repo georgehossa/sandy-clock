@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,9 +35,13 @@ export default function ParentSettings() {
   const armedPresetId = useSandClockStore((s) => s.armedPresetId);
   const tone = useSandClockStore((s) => s.tone);
   const language = useSandClockStore((s) => s.language);
+  const notificationsEnabled = useSandClockStore((s) => s.notificationsEnabled);
   const arm = useSandClockStore((s) => s.arm);
   const setTone = useSandClockStore((s) => s.setTone);
   const setLanguage = useSandClockStore((s) => s.setLanguage);
+  const setNotificationsEnabled = useSandClockStore(
+    (s) => s.setNotificationsEnabled,
+  );
 
   const { playPreviewFor } = useFinishTone();
   const previewTone = (id: ToneId) => {
@@ -130,6 +134,41 @@ export default function ParentSettings() {
               </View>
             );
           })}
+        </View>
+      </View>
+
+      {/* NOTIFICATIONS Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
+        <View style={styles.card}>
+          <View style={styles.cardRow}>
+            <View style={styles.rowLeft}>
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={
+                  notificationsEnabled
+                    ? theme.colors.mintDark
+                    : theme.colors.fontSecondary
+                }
+              />
+              <Text style={styles.rowLabel}>
+                {t('settings.notificationsLabel')}
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{
+                false: theme.colors.bgPrimary,
+                true: theme.colors.mint,
+              }}
+              thumbColor="#fff"
+              accessibilityRole="switch"
+              accessibilityLabel={t('settings.notificationsLabel')}
+              accessibilityState={{ checked: notificationsEnabled }}
+            />
+          </View>
         </View>
       </View>
 

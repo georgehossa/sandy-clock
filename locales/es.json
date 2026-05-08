@@ -16,6 +16,8 @@
     "title": "Ajustes",
     "presets": "Tiempos y colores",
     "tone": "Sonido final",
+    "notifications": "Notificaciones",
+    "notificationsLabel": "Avisar cuando se acabe el tiempo",
     "language": "Idioma",
     "languageSystem": "Predeterminado del sistema",
     "languageEnglish": "English",
@@ -24,6 +26,10 @@
     "version": "Versión",
     "privacy": "No recopilamos nada. La app funciona totalmente sin conexión.",
     "back": "Volver al inicio"
+  },
+  "notification": {
+    "title": "Temporizador de {{minutes}} min",
+    "body": "¡Se acabó el tiempo!"
   },
   "tones": {
     "bubble-pop": "Burbuja",

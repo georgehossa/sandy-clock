@@ -11,6 +11,7 @@ import { HoldButton } from '@/components/HoldButton';
 import { configureAudioSession } from '@/lib/audio';
 import { t } from '@/lib/i18n';
 import { theme } from '@/lib/theme';
+import { useFinishNotification } from '@/hooks/useFinishNotification';
 import { useFinishTone } from '@/hooks/useFinishTone';
 import { useSandClockStore } from '@/state/store';
 
@@ -29,6 +30,7 @@ export default function KidHome() {
   const reset = useSandClockStore((s) => s.reset);
 
   useFinishTone();
+  useFinishNotification();
 
   // Measure play button position for confetti origin
   const [btnOrigin, setBtnOrigin] = useState<{ x: number; y: number } | null>(null);
