@@ -34,17 +34,31 @@ export const useFinishNotification = (): void => {
     // No-op in Expo Go — local notifications require a development build.
     if (IS_EXPO_GO) return;
 
-    if (runState === 'running' && notificationsEnabled && armedPresetId) {
+    let isStale = false;
+
+    const shouldSchedule =
+      runState === 'running' && notificationsEnabled && armedPresetId;
+
+    if (shouldSchedule) {
       scheduleFinishNotification(armedPresetId).then((id) => {
-        notifIdRef.current = id;
+        if (isStale) {
+          // Effect cleaned up while scheduling (e.g. rapid start→stop).
+          // Cancel the orphaned notification so it never fires.
+          if (id) cancelFinishNotification(id);
+        } else {
+          notifIdRef.current = id;
+        }
       });
-    } else if (runState === 'armed' || runState === 'idle') {
-      // Stop or reset — cancel any pending notification.
+    } else if (notifIdRef.current !== null) {
+      // Cancel when: timer stopped/reset/finished, or notifications disabled
+      // mid-run, or preset becomes null.
       cancelFinishNotification(notifIdRef.current);
       notifIdRef.current = null;
     }
-    // 'finished' state: notification either already fired (background) or was
-    // suppressed (foreground). Either way, no action needed.
+
+    return () => {
+      isStale = true;
+    };
   }, [runState, notificationsEnabled, armedPresetId]);
 };
 
@@ -59,8 +73,8 @@ async function scheduleFinishNotification(
   presetId: string,
 ): Promise<string | null> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Notifications =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('expo-notifications') as typeof import('expo-notifications');
 
     // Request permission lazily on first use.
@@ -108,8 +122,8 @@ async function scheduleFinishNotification(
  */
 async function cancelFinishNotification(id: string | null): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Notifications =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('expo-notifications') as typeof import('expo-notifications');
 
     if (id) {
